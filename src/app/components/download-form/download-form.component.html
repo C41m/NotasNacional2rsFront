@@ -1,0 +1,29 @@
+<div class="container">
+  <div class="header-section">
+    <h2>Download NFSe</h2>
+  </div>
+
+  <div class="info" *ngIf="companyIds.length > 0">
+    <span>Selecionadas: {{ companyIds.length }} empresa(s)</span>
+    <a routerLink="/companies">Alterar seleção</a>
+  </div>
+
+  <div class="form-section">
+    <form (ngSubmit)="onSubmit()" #downloadForm="ngForm">
+      <div class="form-group">
+        <label for="datainicio">Data Inicial</label>
+        <input type="date" id="datainicio" [(ngModel)]="datainicio" name="datainicio" required class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="datafim">Data Final</label>
+        <input type="date" id="datafim" [(ngModel)]="datafim" name="datafim" required class="form-control">
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="loading || !datainicio || !datafim">
+        <span *ngIf="!loading">Iniciar Download</span>
+        <span *ngIf="loading">Processando...</span>
+      </button>
+    </form>
+  </div>
+</div>

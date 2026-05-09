@@ -1,0 +1,48 @@
+<div class="container">
+  <div class="header-section">
+    <h2>Empresas Cadastradas</h2>
+  </div>
+
+  <div class="actions">
+    <button (click)="selectAll()" class="btn">
+      {{ selectedIds.length === companies.length ? 'Desmarcar Todas' : 'Selecionar Todas' }}
+    </button>
+    <button (click)="startDownload()" class="btn btn-primary" [disabled]="selectedIds.length === 0">
+      Baixar Selecionadas ({{ selectedIds.length }})
+    </button>
+    <a routerLink="/companies/new" class="btn btn-secondary">Nova Empresa</a>
+  </div>
+
+  <div class="search">
+    <input type="text" placeholder="Buscar por nome ou CNPJ..." [ngModel]="search" (ngModelChange)="onSearch()" />
+  </div>
+
+  <div *ngIf="loading" class="loading">Carregando...</div>
+
+  <div *ngIf="!loading" class="table-container">
+    <table *ngIf="companies.length > 0" class="table">
+      <thead>
+        <tr>
+          <th>Seleção</th>
+          <th>Nome</th>
+          <th>CNPJ</th>
+          <th>Validade Certificado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let company of companies">
+          <td>
+            <input type="checkbox" [checked]="selectedIds.includes(company.id)" (change)="toggleSelection(company.id)" />
+          </td>
+          <td>{{ company.nome }}</td>
+          <td>{{ company.cnpj }}</td>
+          <td>{{ company.validade_cert || 'Sem certificado' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="companies.length === 0 && !loading" class="empty">
+    Nenhuma empresa cadastrada. <a routerLink="/companies/new">Cadastre uma agora</a>.
+  </div>
+</div>
