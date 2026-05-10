@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://2rsnotas-backend.onrender.com/:path*"
+      "destination": "https://automacao-notas-nacional-2rs-api.onrender.com/:path*"
     }
   ]
 }
