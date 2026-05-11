@@ -1,4 +1,5 @@
+// src/environments/environment.staging.ts
 export const environment = {
   production: true,
-  apiUrl: 'https://2rsnotas-backend.onrender.com'
+  apiUrl: 'https://automacao-notas-nacional-2rs-api.onrender.com'
 };
