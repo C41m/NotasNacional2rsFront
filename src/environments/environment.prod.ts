@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api' // Usando proxy reverso via Vercel rewrites
+  apiUrl: 'https://automacao-notas-nacional-2rs-api.onrender.com'
 };
