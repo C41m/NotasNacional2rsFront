@@ -13,9 +13,7 @@
 <body>
 <script>
   window.__APP_CONFIG__ = {
-    apiUrl: (typeof window !== 'undefined' && window.API_URL?.startsWith('http')) 
-      ? window.API_URL 
-      : null
+    apiUrl: null // ← null ou undefined para NÃO sobrescrever o environment
   };
 </script>
   <app-root></app-root>
