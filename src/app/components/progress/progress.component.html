@@ -13,7 +13,7 @@
   <div *ngIf="status && !loading" class="status-card">
     <div class="status-header">
       <span class="status-badge" [ngClass]="status.status">
-        {{ status.status | titlecase }}
+        {{ getStatusLabel(status.status) }}
       </span>
     </div>
 
@@ -36,7 +36,10 @@
       <div class="company-list">
         <div class="company-item" *ngFor="let cid of getCompanyIds()" [ngClass]="getCompany(cid)?.status || 'queued'">
           <div class="company-header" (click)="toggleCompany(cid)">
-            <span class="company-id">Empresa ID: {{ cid }}</span>
+            <span class="company-id">
+              CNPJ: {{ getCompany(cid)?.cnpj || 'Carregando...' }}
+              <span *ngIf="getCompany(cid)?.nome">&nbsp;—&nbsp;{{ getCompany(cid)?.nome }}</span>
+            </span>
             <span class="company-status" [ngClass]="getCompany(cid)?.status || 'queued'">
               {{ getStatusLabel(getCompany(cid)?.status || 'queued') }}
             </span>

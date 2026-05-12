@@ -8,6 +8,8 @@ export interface CompanyProgress {
   status: string;
   notas_done: number;
   notas_total: number;
+  cnpj: string;
+  nome: string;
 }
 
 export interface BatchStatus {
