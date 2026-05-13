@@ -1,44 +1,154 @@
-<div class="container">
-  <div class="header-section">
-    <h2>Cadastrar Nova Empresa</h2>
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="page-title">{{ isEdit ? 'Editar Empresa' : 'Cadastrar Nova Empresa' }}</h1>
+    <p class="page-subtitle">{{ isEdit ? 'Atualize as informações da empresa abaixo' : 'Preencha os dados para cadastrar uma nova empresa' }}</p>
   </div>
 
-  <div class="alert alert-success" *ngIf="success">
-    Empresa cadastrada com sucesso! Redirecionando...
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading && !success" class="card overflow-hidden">
+    <div class="p-7">
+      <div class="skeleton skeleton-title w-2/5 mb-6"></div>
+      <div class="space-y-5">
+        <div class="skeleton" style="height:48px;"></div>
+        <div class="skeleton" style="height:48px;"></div>
+        <div class="skeleton" style="height:48px;"></div>
+        <div class="skeleton" style="height:48px;"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="alert alert-error" *ngIf="error">
-    {{ error }}
+  <!-- Alerts -->
+  <div class="alert alert-success mb-4" *ngIf="success">
+    <span class="material-symbols-rounded text-success">check_circle</span>
+    <div>
+      <span class="font-medium">Sucesso</span>
+      <p class="text-sm text-white/60 mt-0.5">{{ isEdit ? 'Empresa atualizada' : 'Empresa cadastrada' }} com sucesso! Redirecionando...</p>
+    </div>
   </div>
 
-  <div class="form-section">
-    <form (ngSubmit)="onSubmit()" #companyForm="ngForm">
+  <div class="alert alert-error mb-4" *ngIf="error">
+    <span class="material-symbols-rounded text-error">error</span>
+    <div>
+      <span class="font-medium">Erro</span>
+      <p class="text-sm text-white/60 mt-0.5">{{ error }}</p>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="!loading || success">
+    <form (ngSubmit)="onSubmit()" #companyForm="ngForm" class="space-y-6">
+
+      <!-- Empresa -->
       <div class="form-group">
-        <label for="nome">Nome</label>
-        <input type="text" id="nome" [(ngModel)]="model.nome" name="nome" required class="form-control" placeholder="Razão social da empresa">
+        <label for="nome" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">business</span>
+          Nome da Empresa
+        </label>
+        <input type="text"
+               id="nome"
+               [(ngModel)]="model.nome"
+               name="nome"
+               required
+               class="form-control"
+               placeholder="Razão social da empresa" />
       </div>
 
+      <!-- CNPJ -->
       <div class="form-group">
-        <label for="cnpj">CNPJ</label>
-        <input type="text" id="cnpj" [(ngModel)]="model.cnpj" name="cnpj" required class="form-control" placeholder="00.000.000/0000-00">
+        <label for="cnpj" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">badge</span>
+          CNPJ
+        </label>
+        <input type="text"
+               id="cnpj"
+               [(ngModel)]="model.cnpj"
+               name="cnpj"
+               required
+               class="form-control"
+               placeholder="00.000.000/0000-00" />
       </div>
 
-      <div class="form-group">
-        <label for="certificate">Certificado (PFX)</label>
-        <input type="file" id="certificate" (change)="onFileSelected($event)" accept=".pfx" required class="form-control">
+      <!-- Seção de Certificado (edição) -->
+      <div *ngIf="isEdit" class="form-group">
+        <label class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">security</span>
+          <span *ngIf="currentCertFile">Certificado Atual</span>
+          <span *ngIf="!currentCertFile">Certificado (PFX)</span>
+        </label>
+        <input type="file"
+               id="certificate"
+               (change)="onFileSelected($event)"
+               accept=".pfx"
+               class="form-control file-input-custom" />
+        <small class="form-hint">Deixe em branco para manter o certificado atual</small>
+        <div *ngIf="currentCertFile" class="mt-2 p-3 rounded-lg bg-accent/5 border border-accent/15 text-sm text-accent">
+          <span class="material-symbols-rounded text-sm align-middle mr-1">check_circle</span>
+          {{ currentCertFile }}
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="password">Senha do Certificado</label>
-        <input type="password" id="password" [(ngModel)]="model.password" name="password" required class="form-control">
+      <!-- Senha (edição) -->
+      <div *ngIf="isEdit" class="form-group">
+        <label for="password" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">key</span>
+          Senha do Certificado
+        </label>
+        <input type="password"
+               id="password"
+               [(ngModel)]="model.password"
+               name="password"
+               class="form-control"
+               placeholder="Digite apenas se quiser alterar" />
+        <small class="form-hint">Deixe em branco para manter a senha atual</small>
       </div>
 
-      <button type="submit" class="btn btn-primary" [disabled]="loading">
-        <span *ngIf="!loading">Cadastrar</span>
-        <span *ngIf="loading">Cadastrando...</span>
-      </button>
+      <!-- Seção de Certificado (novo) -->
+      <div *ngIf="!isEdit" class="form-group">
+        <label class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">upload_file</span>
+          Certificado (PFX)
+        </label>
+        <input type="file"
+               id="certificate"
+               (change)="onFileSelected($event)"
+               accept=".pfx"
+               required
+               class="form-control file-input-custom" />
+        <small class="form-hint">Formato .pfx obrigatório</small>
+      </div>
+
+      <!-- Senha (novo) -->
+      <div *ngIf="!isEdit" class="form-group">
+        <label for="password" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">key</span>
+          Senha do Certificado
+        </label>
+        <input type="password"
+               id="password"
+               [(ngModel)]="model.password"
+               name="password"
+               required
+               class="form-control"
+               placeholder="Senha do arquivo PFX" />
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex items-center justify-between pt-4 border-t border-white/5">
+        <a routerLink="/companies" class="btn btn-ghost">
+          <span class="material-symbols-rounded">arrow_back</span>
+          Voltar
+        </a>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">
+            <span class="material-symbols-rounded text-sm">save</span>
+            {{ isEdit ? 'Salvar Alterações' : 'Cadastrar' }}
+          </span>
+          <span *ngIf="loading" class="flex items-center gap-2">
+            <div class="spinner-sm"></div>
+            {{ isEdit ? 'Salvando...' : 'Cadastrando...' }}
+          </span>
+        </button>
+      </div>
     </form>
   </div>
-
-  <a routerLink="/companies" class="back-link">← Voltar para lista</a>
 </div>

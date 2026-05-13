@@ -26,6 +26,19 @@ export class CompanyListComponent implements OnInit {
     this.loadCompanies();
   }
 
+  // Computed stats
+  get totalCompanies(): number {
+    return this.companies.length;
+  }
+
+  get certCount(): number {
+    return this.companies.filter(c => c.validade_cert).length;
+  }
+
+  get noCertCount(): number {
+    return this.companies.filter(c => !c.validade_cert).length;
+  }
+
   loadCompanies() {
     this.loading = true;
     this.api.listCompanies(this.page, this.limit, this.search).subscribe({
@@ -57,6 +70,23 @@ export class CompanyListComponent implements OnInit {
     }
   }
 
+  editCompany(id: number) {
+    window.location.href = `/companies/${id}/edit`;
+  }
+
+  deleteCompany(id: number, nome: string) {
+    if (!confirm(`Excluir a empresa "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    this.api.deleteCompany(id.toString()).subscribe({
+      next: () => {
+        this.loadCompanies();
+      },
+      error: (err) => {
+        console.error('Erro ao excluir empresa:', err);
+        alert('Erro ao excluir empresa');
+      }
+    });
+  }
+
   startDownload() {
     if (this.selectedIds.length === 0) {
       alert('Selecione pelo menos uma empresa');
@@ -64,6 +94,13 @@ export class CompanyListComponent implements OnInit {
     }
     localStorage.setItem('selectedCompanyIds', JSON.stringify(this.selectedIds));
     window.location.href = '/download';
+  }
+
+  formatCertDate(dateStr: string | null): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
   }
 
   onSearch() {

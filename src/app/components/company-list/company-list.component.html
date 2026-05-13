@@ -1,48 +1,167 @@
-<div class="container">
-  <div class="header-section">
-    <h2>Empresas Cadastradas</h2>
+<!-- Page Header — Hero Section -->
+<header class="page-hero">
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="page-title mb-1">Empresas</h1>
+      <p class="page-subtitle">Gerencie cadastros e inicie downloads de NFSe</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="btn btn-primary" routerLink="/companies/new">
+        <span class="material-symbols-rounded text-lg">add</span>
+        Nova Empresa
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+  <div class="stat-card">
+    <div class="stat-card-icon bg-accent/10 text-accent">
+      <span class="material-symbols-rounded">business</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Total de Empresas</span>
+      <span class="stat-card-value">{{ totalCompanies }}</span>
+    </div>
   </div>
 
-  <div class="actions">
-    <button (click)="selectAll()" class="btn">
-      {{ selectedIds.length === companies.length ? 'Desmarcar Todas' : 'Selecionar Todas' }}
-    </button>
-    <button (click)="startDownload()" class="btn btn-primary" [disabled]="selectedIds.length === 0">
-      Baixar Selecionadas ({{ selectedIds.length }})
-    </button>
-    <a routerLink="/companies/new" class="btn btn-secondary">Nova Empresa</a>
+  <div class="stat-card">
+    <div class="stat-card-icon bg-success/10 text-success">
+      <span class="material-symbols-rounded">verified</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Com Certificado</span>
+      <span class="stat-card-value text-success">{{ certCount }}</span>
+    </div>
   </div>
 
-  <div class="search">
-    <input type="text" placeholder="Buscar por nome ou CNPJ..." [ngModel]="search" (ngModelChange)="onSearch()" />
+  <div class="stat-card">
+    <div class="stat-card-icon bg-error/10 text-error">
+      <span class="material-symbols-rounded">warning</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Sem Certificado</span>
+      <span class="stat-card-value text-error">{{ noCertCount }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main Card — Toolbar + Search + Table -->
+<div class="card">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <!-- Search -->
+      <div class="search-wrapper">
+        <span class="material-symbols-rounded search-icon">search</span>
+        <input
+          type="text"
+          class="form-input"
+          placeholder="Buscar por nome ou CNPJ..."
+          [(ngModel)]="search"
+          (ngModelChange)="onSearch()"
+        />
+        <button class="search-clear" *ngIf="search" (click)="search=''; onSearch();">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <div class="selection-count" *ngIf="selectedIds.length > 0">
+        <span class="material-symbols-rounded text-sm">check_circle</span>
+        {{ selectedIds.length }} selecionada{{ selectedIds.length > 1 ? 's' : '' }}
+      </div>
+      <button class="btn btn-sm btn-ghost" (click)="selectAll()">
+        {{ selectedIds.length === companies.length ? 'Desmarcar' : 'Selecionar Todas' }}
+      </button>
+      <button class="btn btn-sm btn-primary" (click)="startDownload()" [disabled]="selectedIds.length === 0">
+        <span class="material-symbols-rounded text-sm">download</span>
+        Baixar
+      </button>
+    </div>
   </div>
 
-  <div *ngIf="loading" class="loading">Carregando...</div>
+  <!-- Divider -->
+  <div class="card-divider"></div>
 
-  <div *ngIf="!loading" class="table-container">
-    <table *ngIf="companies.length > 0" class="table">
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading" class="p-5 space-y-4">
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading && companies.length > 0" class="table-wrapper">
+    <table class="data-table">
       <thead>
         <tr>
-          <th>Seleção</th>
-          <th>Nome</th>
-          <th>CNPJ</th>
-          <th>Validade Certificado</th>
+          <th style="width:48px;">
+            <input
+              type="checkbox"
+              [checked]="selectedIds.length === companies.length && companies.length > 0"
+              (change)="selectAll()"
+              class="accent-teal"
+            />
+          </th>
+          <th>Empresa</th>
+          <th style="text-align:center;">CNPJ</th>
+          <th style="text-align:center; min-width:140px;">Certificado</th>
+          <th style="text-align:center; width:140px;">Ações</th>
         </tr>
       </thead>
-      <tbody>
-        <tr *ngFor="let company of companies">
+      <tbody class="stagger-children">
+        <tr *ngFor="let company of companies; let i = index" [class.row-even]="i % 2 === 0">
           <td>
-            <input type="checkbox" [checked]="selectedIds.includes(company.id)" (change)="toggleSelection(company.id)" />
+            <input
+              type="checkbox"
+              [checked]="selectedIds.includes(company.id)"
+              (change)="toggleSelection(company.id)"
+              class="accent-teal"
+            />
           </td>
-          <td>{{ company.nome }}</td>
-          <td>{{ company.cnpj }}</td>
-          <td>{{ company.validade_cert || 'Sem certificado' }}</td>
+          <td class="company-name-cell">
+            <div class="company-name">{{ company.nome }}</div>
+          </td>
+          <td style="text-align:center;"><code class="code">{{ company.cnpj }}</code></td>
+          <td style="text-align:center;">
+            <div class="flex flex-col items-center gap-0.5">
+              <span class="badge" [ngClass]="company.validade_cert ? 'badge-processing' : 'badge-failed'">
+                <span class="badge-dot"></span>
+                {{ company.validade_cert ? 'Válido' : 'Sem Certificado' }}
+              </span>
+              <span *ngIf="company.validade_cert" class="text-xs text-text-dim font-mono">{{ formatCertDate(company.validade_cert) }}</span>
+            </div>
+          </td>
+          <td style="text-align:center;">
+            <div class="action-buttons">
+              <button class="btn btn-icon btn-sm" (click)="editCompany(company.id)" title="Editar">
+                <span class="material-symbols-rounded">edit_note</span>
+              </button>
+              <button class="btn btn-icon btn-sm btn-cancel" (click)="deleteCompany(company.id, company.nome)" title="Excluir">
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <div *ngIf="companies.length === 0 && !loading" class="empty">
-    Nenhuma empresa cadastrada. <a routerLink="/companies/new">Cadastre uma agora</a>.
+  <!-- Empty state -->
+  <div *ngIf="!loading && companies.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <span class="material-symbols-rounded">business_center</span>
+    </div>
+    <p class="text-lg font-display text-white/70">Nenhuma empresa cadastrada</p>
+    <p class="mt-2 text-sm text-muted">Cadastre sua primeira empresa para começar a gerenciar suas NFSe.</p>
+    <a routerLink="/companies/new" class="mt-4 btn btn-primary">
+      <span class="material-symbols-rounded text-sm">add</span>
+      Cadastrar Empresa
+    </a>
   </div>
 </div>

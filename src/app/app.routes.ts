@@ -4,6 +4,8 @@ export const routes: Routes = [
   { path: '', redirectTo: 'companies', pathMatch: 'full' },
   { path: 'companies', loadComponent: () => import('./components/company-list/company-list.component').then(m => m.CompanyListComponent) },
   { path: 'companies/new', loadComponent: () => import('./components/company-form/company-form.component').then(m => m.CompanyFormComponent) },
+  { path: 'companies/:id/edit', loadComponent: () => import('./components/company-form/company-form.component').then(m => m.CompanyFormComponent) },
   { path: 'download', loadComponent: () => import('./components/download-form/download-form.component').then(m => m.DownloadFormComponent) },
-  { path: 'download/:batchId', loadComponent: () => import('./components/progress/progress.component').then(m => m.ProgressComponent) }
+  { path: 'download/:batchId', loadComponent: () => import('./components/progress/progress.component').then(m => m.ProgressComponent) },
+  { path: 'batches', loadComponent: () => import('./components/batch-list/batch-list.component').then(m => m.BatchListComponent) }
 ];

@@ -1,18 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { CompanyCreate } from '../../models/company.model';
+import { Company, CompanyCreate, CompanyUpdate } from '../../models/company.model';
 
 @Component({
   selector: 'app-company-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './company-form.component.html',
   styleUrls: ['./company-form.component.css']
 })
-export class CompanyFormComponent {
+export class CompanyFormComponent implements OnInit {
   model: CompanyCreate = {
     nome: '',
     cnpj: '',
@@ -22,8 +22,53 @@ export class CompanyFormComponent {
   loading = false;
   error = '';
   success = false;
+  isEdit = false;
+  companyId: number | null = null;
+  currentCertFile: string | null = null;
+  showCertSection = false;
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      const id = params['id'];
+      if (id) {
+        this.isEdit = true;
+        this.companyId = +id;
+        this.loadCompany(+id);
+      } else {
+        this.isEdit = false;
+        this.companyId = null;
+        this.resetForm();
+      }
+    });
+  }
+
+  loadCompany(id: number) {
+    this.loading = true;
+    this.api.getCompany(id.toString()).subscribe({
+      next: (company: Company) => {
+        this.model.nome = company.nome;
+        this.model.cnpj = company.cnpj;
+        this.currentCertFile = company.validade_cert || null;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Erro ao carregar empresa';
+        this.loading = false;
+      }
+    });
+  }
+
+  resetForm() {
+    this.model = { nome: '', cnpj: '', pfx_base64: '', password: '' };
+    this.currentCertFile = null;
+    this.showCertSection = false;
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -37,18 +82,41 @@ export class CompanyFormComponent {
   }
 
   onSubmit() {
+    if (!this.model.nome || !this.model.cnpj) return;
+
     this.loading = true;
     this.error = '';
-    this.api.createCompany(this.model).subscribe({
-      next: () => {
-        this.success = true;
-        this.loading = false;
-        setTimeout(() => this.router.navigate(['/companies']), 2000);
-      },
-      error: (err) => {
-        this.error = err.message || 'Erro ao cadastrar empresa';
-        this.loading = false;
-      }
-    });
+
+    if (this.isEdit && this.companyId) {
+      const updateData: CompanyUpdate = {
+        nome: this.model.nome,
+        ...(this.model.pfx_base64 && { pfx_base64: this.model.pfx_base64 }),
+        ...(this.model.password && { password: this.model.password })
+      };
+
+      this.api.updateCompany(this.companyId.toString(), updateData).subscribe({
+        next: () => {
+          this.success = true;
+          this.loading = false;
+          setTimeout(() => this.router.navigate(['/companies']), 2000);
+        },
+        error: (err) => {
+          this.error = err.message || 'Erro ao atualizar empresa';
+          this.loading = false;
+        }
+      });
+    } else {
+      this.api.createCompany(this.model).subscribe({
+        next: () => {
+          this.success = true;
+          this.loading = false;
+          setTimeout(() => this.router.navigate(['/companies']), 2000);
+        },
+        error: (err) => {
+          this.error = err.message || 'Erro ao cadastrar empresa';
+          this.loading = false;
+        }
+      });
+    }
   }
 }

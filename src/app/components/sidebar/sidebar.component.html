@@ -1,0 +1,26 @@
+<nav class="app-sidebar" [class.open]="(ui.sidebarOpen$ | async) || false">
+  <div class="app-sidebar-header">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">2</div>
+      <div class="sidebar-logo-text">2RS <span>Notas</span></div>
+    </div>
+  </div>
+
+  <div class="app-sidebar-nav">
+    <a *ngFor="let item of navItems"
+       [routerLink]="item.path"
+       class="sidebar-nav-item"
+       [class.active]="isActive(item.path)">
+      <span class="nav-icon material-symbols-rounded">{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+      <span *ngIf="item.badge" class="nav-badge">{{ item.badge }}</span>
+    </a>
+  </div>
+
+  <div class="app-sidebar-footer">
+    <a class="sidebar-nav-item" style="color: var(--color-text-muted);" routerLink="/companies">
+      <span class="nav-icon material-symbols-rounded" style="opacity:0.5;">settings</span>
+      <span>Configurações</span>
+    </a>
+  </div>
+</nav>

@@ -1,29 +1,81 @@
-<div class="container">
-  <div class="header-section">
-    <h2>Download NFSe</h2>
-  </div>
+<!-- Header -->
+<div class="mb-6">
+  <h1 class="page-title">Download NFSe</h1>
+  <p class="page-subtitle">Selecione o período para baixar as notas fiscais das empresas selecionadas</p>
+</div>
 
-  <div class="info" *ngIf="companyIds.length > 0">
-    <span>Selecionadas: {{ companyIds.length }} empresa(s)</span>
-    <a routerLink="/companies">Alterar seleção</a>
+<!-- Info banner -->
+<div class="alert alert-info mb-6">
+  <span class="material-symbols-rounded text-accent">info</span>
+  <div class="flex-1">
+    <span class="font-medium">Empresas selecionadas</span>
+    <p class="text-sm text-white/60 mt-0.5">{{ companyIds.length }} empresa{{ companyIds.length > 1 ? 's' : '' }} — <a routerLink="/companies" class="text-accent hover:underline underline-offset-2">alterar seleção</a></p>
   </div>
+</div>
 
-  <div class="form-section">
-    <form (ngSubmit)="onSubmit()" #downloadForm="ngForm">
+<!-- Loading Skeleton -->
+<div *ngIf="loading" class="card overflow-hidden">
+  <div class="p-7">
+    <div class="skeleton skeleton-title w-1/4 mb-6"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="skeleton" style="height:48px;"></div>
+      <div class="skeleton" style="height:48px;"></div>
+    </div>
+    <div class="skeleton mt-6" style="height:48px; width:40%;"></div>
+  </div>
+</div>
+
+<div class="card" *ngIf="!loading">
+  <form (ngSubmit)="onSubmit()" #downloadForm="ngForm" class="space-y-6">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Data Inicial -->
       <div class="form-group">
-        <label for="datainicio">Data Inicial</label>
-        <input type="date" id="datainicio" [(ngModel)]="datainicio" name="datainicio" required class="form-control">
+        <label for="datainicio" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">calendar_today</span>
+          Data Inicial
+        </label>
+        <input type="date"
+               id="datainicio"
+               [(ngModel)]="datainicio"
+               name="datainicio"
+               required
+               class="form-control" />
       </div>
 
+      <!-- Data Final -->
       <div class="form-group">
-        <label for="datafim">Data Final</label>
-        <input type="date" id="datafim" [(ngModel)]="datafim" name="datafim" required class="form-control">
+        <label for="datafim" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">event</span>
+          Data Final
+        </label>
+        <input type="date"
+               id="datafim"
+               [(ngModel)]="datafim"
+               name="datafim"
+               required
+               class="form-control" />
       </div>
+    </div>
 
-      <button type="submit" class="btn btn-primary" [disabled]="loading || !datainicio || !datafim">
-        <span *ngIf="!loading">Iniciar Download</span>
-        <span *ngIf="loading">Processando...</span>
+    <!-- Actions -->
+    <div class="flex items-center justify-between pt-4 border-t border-white/5">
+      <a routerLink="/companies" class="btn btn-ghost">
+        <span class="material-symbols-rounded">arrow_back</span>
+        Voltar
+      </a>
+      <button type="submit"
+              class="btn btn-primary"
+              [disabled]="loading || !datainicio || !datafim">
+        <span *ngIf="!loading">
+          <span class="material-symbols-rounded text-sm">download</span>
+          Iniciar Download
+        </span>
+        <span *ngIf="loading" class="flex items-center gap-2">
+          <div class="spinner-sm"></div>
+          Processando...
+        </span>
       </button>
-    </form>
-  </div>
+    </div>
+  </form>
 </div>

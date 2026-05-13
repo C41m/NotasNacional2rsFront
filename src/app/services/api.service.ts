@@ -80,6 +80,18 @@ export class ApiService {
     );
   }
 
+  cancelBatch(batchId: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/nfse/batch-download/${batchId}/cancel`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  listActiveBatches(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/nfse/batch-download/active`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   downloadBatchFile(batchId: string): void {
     // ✅ Abre em nova aba para download do arquivo
     window.open(`${this.baseUrl}/nfse/batch-download/${batchId}/file`, '_blank');

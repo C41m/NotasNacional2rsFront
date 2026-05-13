@@ -1,86 +1,231 @@
-<div class="container">
-  <h2>Acompanhamento de Download</h2>
-
-  <div *ngIf="loading" class="loading">
-    Carregando status...
-  </div>
-
-  <div *ngIf="error" class="alert alert-error">
-    {{ error }}
-    <button (click)="goBack()" class="btn">Voltar</button>
-  </div>
-
-  <div *ngIf="status && !loading" class="status-card">
-    <div class="status-header">
-      <span class="status-badge" [ngClass]="status.status">
-        {{ getStatusLabel(status.status) }}
-      </span>
-    </div>
-
-    <!-- Barra de progresso global -->
-    <div class="progress-section" *ngIf="status.status === 'processing' || status.status === 'success'">
-      <h3>Progresso Geral</h3>
-      <div class="progress-bar global">
-        <div class="progress-fill" [style.width.%]="getProgress()">
-          {{ getProgress() }}%
-        </div>
+<div class="max-w-5xl mx-auto">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <h1 class="page-title">Acompanhamento de Download</h1>
+        <p class="page-subtitle">Acompanhe o progresso em tempo real</p>
       </div>
-      <p class="progress-text">
-        {{ status.done }} de {{ status.total }} empresas concluídas
-      </p>
-      <!-- Contador de atualizações (variável local, sem consulta ao banco) -->
-      <p class="progress-text">
-        Atualizações consultadas: {{ atualizacoes }}
-      </p>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-sm btn-ghost" (click)="goBack()">
+          <span class="material-symbols-rounded">arrow_back</span>
+          Voltar
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- Lista de empresas com progresso individual -->
-    <div class="companies-section" *ngIf="status.companies && (status.status === 'processing' || status.status === 'success')">
-      <h3>Progresso por Empresa</h3>
-      <div class="company-list">
-        <div class="company-item" *ngFor="let cid of getCompanyIds()" [ngClass]="getCompany(cid)?.status || 'queued'">
-          <div class="company-header" (click)="toggleCompany(cid)">
-            <span class="company-id">
-              CNPJ: {{ getCompany(cid)?.cnpj || 'Carregando...' }}
-              <span *ngIf="getCompany(cid)?.nome">&nbsp;—&nbsp;{{ getCompany(cid)?.nome }}</span>
-            </span>
-            <span class="company-status" [ngClass]="getCompany(cid)?.status || 'queued'">
-              {{ getStatusLabel(getCompany(cid)?.status || 'queued') }}
-            </span>
-            <span class="toggle-icon">{{ isCompanyExpanded(cid) ? '▼' : '▶' }}</span>
-          </div>
+  <!-- Status Banner -->
+  <div *ngIf="status?.status === 'processing'" class="processing-banner mb-6">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-rounded text-neon text-xl animate-breathe">sync</span>
+      <div class="flex-1">
+        <span class="font-semibold text-white">Processamento em andamento</span>
+        <p class="text-sm text-text-muted mt-0.5">O download continua em segundo plano. Volte a qualquer momento.</p>
+      </div>
+      <div class="spinner-sm flex-shrink-0"></div>
+    </div>
+  </div>
 
-          <!-- Barra de progresso da empresa (expansível) -->
-          <div class="company-details" *ngIf="isCompanyExpanded(cid)">
-            <ng-container *ngIf="getCompany(cid) as company">
-              <div class="progress-bar company" *ngIf="company.status === 'processing' || company.status === 'success'">
-                <div class="progress-fill" [style.width.%]="getCompanyProgress(company)">
-                  {{ getCompanyProgress(company) }}%
-                </div>
-              </div>
-              <p class="progress-text" *ngIf="company.notas_total > 0">
-                {{ company.notas_done }} de {{ company.notas_total }} notas processadas
-              </p>
-              <p class="progress-text" *ngIf="company.notas_total === 0 && company.status === 'processing'">
-                Aguardando dados da página...
-              </p>
-            </ng-container>
-          </div>
-        </div>
+  <div class="card">
+    <!-- Summary Stats -->
+    <div *ngIf="status && !loading" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="summary-stat">
+        <span class="summary-stat-icon bg-teal-500/10 text-teal-400">
+          <span class="material-symbols-rounded">business</span>
+        </span>
+        <span class="summary-stat-value">{{ status.total }}</span>
+        <span class="summary-stat-label">Empresas</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-stat-icon bg-success/10 text-success">
+          <span class="material-symbols-rounded">check_circle</span>
+        </span>
+        <span class="summary-stat-value text-success">{{ status.done }}</span>
+        <span class="summary-stat-label">Concluídas</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-stat-icon bg-warning/10 text-warning">
+          <span class="material-symbols-rounded">hourglass_top</span>
+        </span>
+        <span class="summary-stat-value text-warning">{{ status.total - status.done }}</span>
+        <span class="summary-stat-label">Pendentes</span>
+      </div>
+      <div class="summary-stat">
+        <span class="summary-stat-icon bg-accent/10 text-accent">
+          <span class="material-symbols-rounded">article</span>
+        </span>
+        <span class="summary-stat-value text-accent">{{ getTotalNotas() }}</span>
+        <span class="summary-stat-label">Notas Baixadas</span>
       </div>
     </div>
 
-    <div *ngIf="status.status === 'success'" class="success-section">
-      <p class="success-text">✓ Download concluído com sucesso!</p>
-      <button (click)="downloadFile()" class="btn btn-primary">
-        Baixar ZIP Final
+    <!-- Overall Progress -->
+    <div *ngIf="status && status?.status !== 'success' && status?.status !== 'failed' && status?.status !== 'cancelled' && !loading" class="mb-8">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-sm font-sans text-text-secondary">Progresso Geral</span>
+        <span class="text-sm font-display font-bold text-neon">{{ getProgress() }}%</span>
+      </div>
+      <div class="progress-bar-lg">
+        <div class="progress-fill-neon" [style.width.%]="getProgress()"></div>
+      </div>
+      <div class="flex items-center justify-between mt-3 text-xs text-muted">
+        <span>{{ status.done }} de {{ status.total }} empresas concluídas</span>
+        <span class="font-mono">{{ getTotalNotas() }} notas processadas</span>
+      </div>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="!loading && status?.status === 'success'" class="state-banner state-success mb-6">
+      <div class="state-banner-icon bg-success/10 text-success">
+        <span class="material-symbols-rounded">check_circle</span>
+      </div>
+      <div class="state-banner-content">
+        <p class="state-banner-title text-success">Download Concluído!</p>
+        <p class="state-banner-text">{{ status?.total ?? 0 }} empresas e {{ getTotalNotas() }} notas processadas com sucesso.</p>
+      </div>
+      <button class="btn btn-primary btn-sm ml-auto" (click)="downloadFile()">
+        <span class="material-symbols-rounded text-sm">download</span>
+        Baixar ZIP
       </button>
     </div>
 
-    <div *ngIf="status.status === 'failed'" class="error-section">
-      <p class="error-text">✗ Erro no processamento</p>
-      <p *ngIf="status.error">{{ status.error }}</p>
-      <button (click)="goBack()" class="btn">Voltar</button>
+    <!-- Error State -->
+    <div *ngIf="!loading && status?.status === 'failed'" class="state-banner state-error mb-6">
+      <div class="state-banner-icon bg-error/10 text-error">
+        <span class="material-symbols-rounded">error</span>
+      </div>
+      <div class="state-banner-content">
+        <p class="state-banner-title text-error">Erro no Processamento</p>
+        <p class="state-banner-text">{{ status?.error }}</p>
+      </div>
+      <div class="flex items-center gap-2 ml-auto">
+        <button class="btn btn-sm btn-ghost" (click)="goBack()">Voltar</button>
+        <button class="btn btn-sm btn-primary" (click)="retry()">
+          <span class="material-symbols-rounded text-sm">refresh</span>
+          Tentar Novamente
+        </button>
+      </div>
+    </div>
+
+    <!-- Cancelled State -->
+    <div *ngIf="!loading && status?.status === 'cancelled'" class="state-banner state-warning mb-6">
+      <div class="state-banner-icon bg-warning/10 text-warning">
+        <span class="material-symbols-rounded">pause_circle</span>
+      </div>
+      <div class="state-banner-content">
+        <p class="state-banner-title text-warning">Download Cancelado</p>
+        <p class="state-banner-text">O processamento foi interrompido pelo usuário.</p>
+      </div>
+      <button class="btn btn-sm btn-primary ml-auto" (click)="goBack()">
+        <span class="material-symbols-rounded text-sm">arrow_back</span>
+        Voltar
+      </button>
+    </div>
+
+    <!-- Per-Company Table -->
+    <div *ngIf="!loading && status?.companies" class="mt-2">
+      <h3 class="section-title-sm">Progresso por Empresa</h3>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:48px;"></th>
+              <th>Empresa</th>
+              <th>CNPJ</th>
+              <th style="min-width:120px;">Progresso</th>
+              <th style="text-align:center; min-width:130px;">Notas</th>
+              <th style="min-width:110px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cid of getCompanyIds(); trackBy: trackById"
+                class="table-row-link"
+                [class.expanded-row]="isCompanyExpanded(cid)"
+                (click)="toggleCompany(cid)">
+              <td>
+                <span class="expand-icon" [class.rotated]="isCompanyExpanded(cid)">
+                  <span class="material-symbols-rounded text-sm">expand_more</span>
+                </span>
+              </td>
+              <td class="company-name-cell">
+                <div class="company-name">{{ getCompanySafe(cid).nome }}</div>
+              </td>
+              <td><code class="code-sm">{{ getCompanySafe(cid).cnpj }}</code></td>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="progress-mini">
+                    <div class="progress-fill" [style.width.%]="getCompanyProgressSafe(cid)"></div>
+                  </div>
+                  <span class="text-xs text-muted font-mono">{{ getCompanyProgressSafe(cid) }}%</span>
+                </div>
+              </td>
+              <td style="text-align:center;">
+                <span class="text-sm font-mono text-white">{{ getCompanySafe(cid).notas_done }} / {{ getCompanySafe(cid).notas_total }}</span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getStatusBadgeClass(getCompanySafe(cid).status)">
+                  <span class="badge-dot"></span>
+                  {{ getStatusLabel(getCompanySafe(cid).status) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Skeleton Loading -->
+    <div *ngIf="loading">
+      <div class="mb-6">
+        <div class="skeleton skeleton-title w-2/5 mb-6"></div>
+        <div class="progress-bar-lg">
+          <div class="skeleton" style="height:100%; width:45%; border-radius:var(--radius-full);"></div>
+        </div>
+        <div class="flex justify-between mt-3">
+          <div class="skeleton" style="height:12px; width:140px;"></div>
+          <div class="skeleton" style="height:12px; width:160px;"></div>
+        </div>
+      </div>
+
+      <h3 class="section-title-sm">Progresso por Empresa</h3>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Empresa</th>
+              <th>CNPJ</th>
+              <th>Progresso</th>
+              <th>Notas</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of [1,2,3,4,5]">
+              <td><div class="skeleton" style="width:24px;height:24px;border-radius:50%;"></div></td>
+              <td><div class="skeleton" style="height:14px;width:150px;"></div></td>
+              <td><div class="skeleton" style="height:11px;width:100px;"></div></td>
+              <td>
+                <div class="progress-mini">
+                  <div class="skeleton" style="height:100%;width:65%;border-radius:var(--radius-full);"></div>
+                </div>
+              </td>
+              <td style="text-align:center;"><div class="skeleton" style="height:12px;width:50px;display:inline-block;"></div></td>
+              <td><div class="skeleton" style="height:18px;width:70px;border-radius:999px;"></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Cancel Button -->
+    <div *ngIf="!loading && status?.status === 'processing'" class="mt-6 text-center">
+      <button class="btn btn-sm btn-cancel" (click)="cancelar()" [disabled]="cancelando">
+        <span *ngIf="!cancelando" class="material-symbols-rounded text-sm">cancel</span>
+        <div *ngIf="cancelando" class="spinner-sm mr-1"></div>
+        {{ cancelando ? 'Cancelando...' : 'Cancelar Download' }}
+      </button>
     </div>
   </div>
 </div>

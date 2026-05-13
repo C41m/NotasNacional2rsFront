@@ -1,18 +1,31 @@
-<header class="header">
-  <div class="container">
-    <div class="logo">
-      <div class="logo-icon">
-        <span style="color: #0a0a0a; font-weight: bold; font-size: 18px;">2</span>
-      </div>
-      <h1><span>2</span>RS Notas</h1>
-    </div>
-    <nav>
-      <a routerLink="/companies" routerLinkActive="active">Empresas</a>
-      <a routerLink="/download" routerLinkActive="active">Download</a>
-    </nav>
-  </div>
-</header>
+<app-sidebar></app-sidebar>
 
-<main class="main">
-  <router-outlet />
-</main>
+<!-- Sidebar Overlay (mobile) -->
+<div *ngIf="ui.sidebarOpen$ | async" class="sidebar-overlay" (click)="ui.closeSidebar()"></div>
+
+<div class="app-content">
+  <!-- Top Bar -->
+  <div class="glass-card" style="margin-bottom: 24px;">
+    <div class="flex items-center justify-between" style="padding: 16px 20px;">
+      <div class="flex items-center gap-3">
+        <button class="menu-toggle" (click)="ui.toggleSidebar()">
+          <span class="material-symbols-rounded text-xl text-white/60">menu</span>
+        </button>
+        <span class="text-sm text-white/40">/</span>
+        <span class="text-sm text-accent font-medium">{{ currentRoute }}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="toggleTheme()">
+          <span class="material-symbols-rounded text-white/60">{{ isDark ? 'dark_mode' : 'light_mode' }}</span>
+        </button>
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-neon-500 flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:scale-110 transition-transform" style="box-shadow: 0 0 12px rgba(20, 255, 236, 0.2);">
+          2R
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-container animate-fade-up">
+    <router-outlet />
+  </div>
+</div>
