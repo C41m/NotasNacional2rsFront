@@ -18,6 +18,9 @@ export class ProgressComponent implements OnInit {
   error: string = '';
   private intervalId: any;
 
+  // Contador local: incrementa a cada consulta bem-sucedida ao backend
+  atualizacoes = 0;
+
   // Track expanded/collapsed state per company
   expandedCompanies: { [key: string]: boolean } = {};
 
@@ -40,11 +43,14 @@ export class ProgressComponent implements OnInit {
   }
 
   checkStatus() {
+    // Consulta a cada 5 segundos apenas para atualizar o progresso
+    // O backend retorna do cache em memória (batch_status), sem bater no banco
     this.intervalId = setInterval(() => {
       this.api.getBatchStatus(this.batchId).subscribe({
         next: (status) => {
           this.status = status;
           this.loading = false;
+          this.atualizacoes++;
           if (status.status === 'success' || status.status === 'failed') {
             clearInterval(this.intervalId);
           }
@@ -55,7 +61,7 @@ export class ProgressComponent implements OnInit {
           clearInterval(this.intervalId);
         }
       });
-    }, 2000);
+    }, 10000);
   }
 
   getProgress(): number {
