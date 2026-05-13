@@ -9,7 +9,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://automacao-notas-nacional-2rs-api.onrender.com/api/$1"
+      "destination": "https://automacao-notas-nacional-2rs-api.onrender.com/$1"
     }
   ]
 }
