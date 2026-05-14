@@ -1,7 +1,7 @@
 // src/app/services/api.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Company, CompanyCreate } from '../models/company.model';
 import { BatchRequest, BatchStatus } from '../models/download.model';
@@ -89,15 +89,6 @@ export class ApiService {
   listActiveBatches(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/nfse/batch-download/active`).pipe(
       catchError(this.handleError)
-    );
-  }
-
-  healthCheck(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/health`).pipe(
-      catchError(() => {
-        // Silencia erro de health check para não poluir o console
-        return of({ status: 'unhealthy' });
-      })
     );
   }
 
