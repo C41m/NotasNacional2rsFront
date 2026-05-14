@@ -61,7 +61,7 @@
     </div>
 
     <!-- Overall Progress -->
-    <div *ngIf="status && status?.status !== 'success' && status?.status !== 'failed' && status?.status !== 'cancelled' && !loading" class="mb-8">
+    <div *ngIf="status && status.status !== 'success' && status.status !== 'failed' && status.status !== 'cancelled' && !loading" class="mb-8">
       <div class="flex items-center justify-between mb-3">
         <span class="text-sm font-sans text-text-secondary">Progresso Geral</span>
         <span class="text-sm font-display font-bold text-neon">{{ getProgress() }}%</span>

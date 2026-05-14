@@ -1,24 +1,29 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, RouterOutlet, RouterLink } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UiService } from './services/ui.service';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { ApiService } from './services/api.service';
+import { interval, Subject, takeUntil, tap, switchMap, timer } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, SidebarComponent],
+  imports: [RouterOutlet, CommonModule, SidebarComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = '2RSNotas';
   isDark = true;
   currentRoute = 'Empresas';
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private router: Router,
-    public ui: UiService
+    public ui: UiService,
+    private api: ApiService
   ) {}
 
   private routeLabels: { [key: string]: string } = {
@@ -34,6 +39,18 @@ export class AppComponent implements OnInit {
       this.currentRoute = this.routeLabels[url] || 'Página Inicial';
       this.ui.closeSidebar();
     });
+
+    // Heartbeat para manter o servidor ativo no Render
+    // Usa timer recursivo com intervalo aleatório entre 4 e 7 minutos
+    const sendHeartbeat = () =>
+      timer(4 * 60 * 1000 + Math.random() * 3 * 60 * 1000).pipe(
+        tap(() => this.api.healthCheck().subscribe()),
+        takeUntil(this.destroy$)
+      );
+
+    sendHeartbeat()
+      .pipe(switchMap(() => sendHeartbeat()))
+      .subscribe();
   }
 
   toggleTheme() {
@@ -44,5 +61,10 @@ export class AppComponent implements OnInit {
 
   go(path: string) {
     this.router.navigateByUrl(path);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
