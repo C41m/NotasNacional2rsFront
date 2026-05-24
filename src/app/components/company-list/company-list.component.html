@@ -108,6 +108,7 @@
               class="accent-teal"
             />
           </th>
+          <th style="text-align:center;">ID Domínio</th>
           <th>Empresa</th>
           <th style="text-align:center;">CNPJ</th>
           <th style="text-align:center; min-width:140px;">Certificado</th>
@@ -123,6 +124,10 @@
               (change)="toggleSelection(company.id)"
               class="accent-teal"
             />
+          </td>
+          <td style="text-align:center;">
+            <span *ngIf="company.id_dominio" class="text-sm font-mono">{{ company.id_dominio }}</span>
+            <span *ngIf="!company.id_dominio" class="text-muted">-</span>
           </td>
           <td class="company-name-cell">
             <div class="company-name">{{ company.nome }}</div>

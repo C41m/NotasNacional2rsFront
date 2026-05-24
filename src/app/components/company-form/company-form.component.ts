@@ -17,7 +17,8 @@ export class CompanyFormComponent implements OnInit {
     nome: '',
     cnpj: '',
     pfx_base64: '',
-    password: ''
+    password: '',
+    id_dominio: undefined
   };
   loading = false;
   error = '';
@@ -54,6 +55,7 @@ export class CompanyFormComponent implements OnInit {
       next: (company: Company) => {
         this.model.nome = company.nome;
         this.model.cnpj = company.cnpj;
+        this.model.id_dominio = company.id_dominio;
         this.currentCertFile = company.validade_cert || null;
         this.loading = false;
       },
@@ -65,7 +67,7 @@ export class CompanyFormComponent implements OnInit {
   }
 
   resetForm() {
-    this.model = { nome: '', cnpj: '', pfx_base64: '', password: '' };
+    this.model = { nome: '', cnpj: '', pfx_base64: '', password: '', id_dominio: undefined };
     this.currentCertFile = null;
     this.showCertSection = false;
   }
@@ -90,6 +92,7 @@ export class CompanyFormComponent implements OnInit {
     if (this.isEdit && this.companyId) {
       const updateData: CompanyUpdate = {
         nome: this.model.nome,
+        ...(this.model.id_dominio !== undefined && { id_dominio: this.model.id_dominio }),
         ...(this.model.pfx_base64 && { pfx_base64: this.model.pfx_base64 }),
         ...(this.model.password && { password: this.model.password })
       };
@@ -106,7 +109,17 @@ export class CompanyFormComponent implements OnInit {
         }
       });
     } else {
-      this.api.createCompany(this.model).subscribe({
+      const createData: CompanyCreate = {
+        nome: this.model.nome,
+        cnpj: this.model.cnpj,
+        pfx_base64: this.model.pfx_base64,
+        password: this.model.password
+      };
+      if (this.model.id_dominio !== undefined && this.model.id_dominio !== null) {
+        createData.id_dominio = this.model.id_dominio;
+      }
+
+      this.api.createCompany(createData).subscribe({
         next: () => {
           this.success = true;
           this.loading = false;

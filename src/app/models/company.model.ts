@@ -5,6 +5,7 @@ export interface Company {
   created_at: string;
   updated_at: string;
   validade_cert?: string | null;
+  id_dominio?: number;
 }
 
 export interface CompanyCreate {
@@ -12,10 +13,12 @@ export interface CompanyCreate {
   cnpj: string;
   pfx_base64: string;
   password: string;
+  id_dominio?: number;
 }
 
 export interface CompanyUpdate {
   nome?: string;
   pfx_base64?: string;
   password?: string;
+  id_dominio?: number;
 }

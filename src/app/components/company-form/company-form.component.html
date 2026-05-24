@@ -68,6 +68,20 @@
                placeholder="00.000.000/0000-00" />
       </div>
 
+      <!-- ID Domínio -->
+      <div class="form-group">
+        <label for="id_dominio" class="form-label">
+          <span class="material-symbols-rounded align-middle text-sm mr-1">dns</span>
+          ID Domínio
+        </label>
+        <input type="number"
+               id="id_dominio"
+               [(ngModel)]="model.id_dominio"
+               name="id_dominio"
+               class="form-control"
+               placeholder="ID do domínio (opcional)" />
+      </div>
+
       <!-- Seção de Certificado (edição) -->
       <div *ngIf="isEdit" class="form-group">
         <label class="form-label">
