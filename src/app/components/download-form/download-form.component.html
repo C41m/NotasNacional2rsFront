@@ -58,6 +58,40 @@
       </div>
     </div>
 
+    <!-- Download Type -->
+    <div class="form-group">
+      <label class="form-label mb-3">
+        <span class="material-symbols-rounded align-middle text-sm mr-1">save</span>
+        Tipo de Download
+      </label>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio"
+                 [(ngModel)]="downloadType"
+                 name="downloadType"
+                 value="xml"
+                 class="w-4 h-4 text-accent" />
+          <span class="text-sm">XML apenas</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio"
+                 [(ngModel)]="downloadType"
+                 name="downloadType"
+                 value="pdf"
+                 class="w-4 h-4 text-accent" />
+          <span class="text-sm">PDF (DANFS-e) apenas</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio"
+                 [(ngModel)]="downloadType"
+                 name="downloadType"
+                 value="both"
+                 class="w-4 h-4 text-accent" />
+          <span class="text-sm">XML + PDF</span>
+        </label>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="flex items-center justify-between pt-4 border-t border-white/5">
       <a routerLink="/companies" class="btn btn-ghost">
@@ -78,4 +112,6 @@
       </button>
     </div>
   </form>
+</div>
+    <div class="flex items-center justify-between pt-4 border-t border-white/5">
 </div>

@@ -2,6 +2,7 @@ export interface BatchRequest {
   company_ids: number[];
   datainicio: string;
   datafim: string;
+  download_type?: 'xml' | 'pdf' | 'both';
 }
 
 export interface CompanyProgress {

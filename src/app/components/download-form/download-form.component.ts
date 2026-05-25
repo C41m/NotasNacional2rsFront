@@ -16,6 +16,7 @@ export class DownloadFormComponent implements OnInit {
   companyIds: number[] = [];
   datainicio: string = '';
   datafim: string = '';
+  downloadType: 'xml' | 'pdf' | 'both' = 'xml';
   loading = false;
   batchId: string | null = null;
 
@@ -48,7 +49,8 @@ export class DownloadFormComponent implements OnInit {
     const request: BatchRequest = {
       company_ids: this.companyIds,
       datainicio: formatDate(this.datainicio),
-      datafim: formatDate(this.datafim)
+      datafim: formatDate(this.datafim),
+      download_type: this.downloadType
     };
     this.api.startBatchDownload(request).subscribe({
       next: (response) => {
