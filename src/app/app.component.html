@@ -1,5 +1,8 @@
 <app-sidebar></app-sidebar>
 
+<!-- PrimeNG Toast -->
+<p-toast position="top-right" [life]="4000"></p-toast>
+
 <!-- Sidebar Overlay (mobile) -->
 <div *ngIf="ui.sidebarOpen$ | async" class="sidebar-overlay" (click)="ui.closeSidebar()"></div>
 

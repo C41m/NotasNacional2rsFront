@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { ToastService } from '../../services/toast.service';
 import { Company, CompanyCreate, CompanyUpdate } from '../../models/company.model';
 
 @Component({
@@ -31,7 +32,8 @@ export class CompanyFormComponent implements OnInit {
   constructor(
     private api: ApiService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {}
 
   ngOnInit() {
@@ -99,12 +101,12 @@ export class CompanyFormComponent implements OnInit {
 
       this.api.updateCompany(this.companyId.toString(), updateData).subscribe({
         next: () => {
-          this.success = true;
+          this.toast.success('Empresa atualizada com sucesso!', 'Sucesso');
           this.loading = false;
-          setTimeout(() => this.router.navigate(['/companies']), 2000);
+          this.router.navigate(['/companies']);
         },
         error: (err) => {
-          this.error = err.message || 'Erro ao atualizar empresa';
+          this.toast.error(err.message || 'Erro ao atualizar empresa', 'Erro');
           this.loading = false;
         }
       });
@@ -121,12 +123,12 @@ export class CompanyFormComponent implements OnInit {
 
       this.api.createCompany(createData).subscribe({
         next: () => {
-          this.success = true;
+          this.toast.success('Empresa cadastrada com sucesso!', 'Sucesso');
           this.loading = false;
-          setTimeout(() => this.router.navigate(['/companies']), 2000);
+          this.router.navigate(['/companies']);
         },
         error: (err) => {
-          this.error = err.message || 'Erro ao cadastrar empresa';
+          this.toast.error(err.message || 'Erro ao cadastrar empresa', 'Erro');
           this.loading = false;
         }
       });

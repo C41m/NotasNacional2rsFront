@@ -18,22 +18,6 @@
     </div>
   </div>
 
-  <!-- Alerts -->
-  <div class="alert alert-success mb-4" *ngIf="success">
-    <span class="material-symbols-rounded text-success">check_circle</span>
-    <div>
-      <span class="font-medium">Sucesso</span>
-      <p class="text-sm text-white/60 mt-0.5">{{ isEdit ? 'Empresa atualizada' : 'Empresa cadastrada' }} com sucesso! Redirecionando...</p>
-    </div>
-  </div>
-
-  <div class="alert alert-error mb-4" *ngIf="error">
-    <span class="material-symbols-rounded text-error">error</span>
-    <div>
-      <span class="font-medium">Erro</span>
-      <p class="text-sm text-white/60 mt-0.5">{{ error }}</p>
-    </div>
-  </div>
 
   <div class="card" *ngIf="!loading || success">
     <form (ngSubmit)="onSubmit()" #companyForm="ngForm" class="space-y-6">
