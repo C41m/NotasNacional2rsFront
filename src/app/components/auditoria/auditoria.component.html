@@ -1,0 +1,906 @@
+<div class="page-container">
+  <!-- Page Header — Hero Section -->
+  <header class="page-hero">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-4">
+        <div class="audit-logo-decoration">
+          <span class="material-symbols-rounded">gavel</span>
+          <span class="material-symbols-rounded">search</span>
+          <span class="material-symbols-rounded">description</span>
+        </div>
+        <div>
+          <h1 class="page-title mb-1">Trilha de Auditoria Forense</h1>
+          <p class="page-subtitle">Análise inteligente de documentos contábeis via IA</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-primary" (click)="activeTab = 'ingest'">
+          <span class="material-symbols-rounded text-lg">add</span>
+          Novo Ingest
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab Navigation (Estilizado para o tema Premium) -->
+  <div class="tab-navigation mb-6">
+    <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">
+      <span class="material-symbols-rounded">dashboard</span>
+      Visão Geral
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'company'" (click)="activeTab = 'company'">
+      <span class="material-symbols-rounded">business</span>
+      Análise por Empresa
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'ingest'" (click)="activeTab = 'ingest'">
+      <span class="material-symbols-rounded">upload_file</span>
+      Novo Ingest
+    </button>
+  </div>
+
+  <!-- ==================== TAB 1: Visão Geral ==================== -->
+  <div *ngIf="activeTab === 'overview'">
+    <!-- Loading Skeleton -->
+    <div *ngIf="loading" class="card p-5 space-y-4">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loading && visaoGeralError" class="card p-5 mb-6 bg-error/5 border-error/20">
+      <div class="flex items-start gap-3">
+        <span class="material-symbols-rounded text-error text-2xl">error</span>
+        <div class="flex-1">
+          <span class="font-semibold text-error">Erro ao carregar dados</span>
+          <p class="mt-1 text-sm text-muted">Não foi possível carregar a visão geral das auditorias. Por favor, tente novamente.</p>
+          <button class="btn btn-sm btn-secondary mt-3" (click)="loadVisaoGeral()">
+            <span class="material-symbols-rounded text-sm">refresh</span>
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !visaoGeralError">
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6" *ngIf="visaoGeral">
+        <div class="stat-card">
+          <div class="stat-card-icon bg-accent/10 text-accent">
+            <span class="material-symbols-rounded">business</span>
+          </div>
+          <div class="stat-card-body">
+            <span class="stat-card-label">Total de Empresas</span>
+            <span class="stat-card-value">{{ filteredEmpresas.length }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon bg-success/10 text-success">
+            <span class="material-symbols-rounded">verified</span>
+          </div>
+          <div class="stat-card-body">
+            <span class="stat-card-label">Conformes</span>
+            <span class="stat-card-value text-success">{{ visaoGeral.kpis.conformes }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon bg-error/10 text-error">
+            <span class="material-symbols-rounded">error</span>
+          </div>
+          <div class="stat-card-body">
+            <span class="stat-card-label">Críticas</span>
+            <span class="stat-card-value text-error">{{ visaoGeral.kpis.criticas }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Documentos Faltantes -->
+            <div class="stat-card mb-6" *ngIf="visaoGeral">
+              <div class="stat-card-icon bg-warning/10 text-warning">
+                <span class="material-symbols-rounded">description</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Total de Documentos Faltantes</span>
+                <span class="stat-card-value text-warning">{{ visaoGeral.kpis.total_documentos_faltantes }}</span>
+              </div>
+            </div>
+
+            <!-- Search Bar + Period Filter (always visible when data loaded) -->
+                        <div *ngIf="visaoGeral && !loading && !visaoGeralError" class="card mb-4">
+                          <div class="toolbar mb-4" style="align-items: center;">
+                            <div class="toolbar-left">
+                              <div class="search-wrapper" style="flex: 1; max-width: 400px;">
+                                <span class="material-symbols-rounded search-icon">search</span>
+                                <input
+                                  type="text"
+                                  class="form-input"
+                                  placeholder="Pesquisar por CNPJ ou razão social..."
+                                  [(ngModel)]="searchTerm"
+                                />
+                                <button class="search-clear" *ngIf="searchTerm" (click)="clearSearch()">
+                                  <span class="material-symbols-rounded">close</span>
+                                </button>
+                              </div>
+                            </div>
+                            <div class="toolbar-right" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                              <div class="form-group" style="margin: 0;">
+                                <label class="form-label" style="font-size: 0.75rem;">Mês/Ano Inicial</label>
+                                <input type="text" class="form-input" style="width: 110px;" placeholder="MM/AAAA" [(ngModel)]="periodoInicial" (input)="formatPeriodoInput($event, 'inicial')" />
+                              </div>
+                              <div class="form-group" style="margin: 0;">
+                                <label class="form-label" style="font-size: 0.75rem;">Mês/Ano Final</label>
+                                <input type="text" class="form-input" style="width: 110px;" placeholder="MM/AAAA" [(ngModel)]="periodoFinal" (input)="formatPeriodoInput($event, 'final')" />
+                              </div>
+                              <button class="btn btn-sm btn-primary" (click)="onPeriodoSearch()">
+                                <span class="material-symbols-rounded text-sm">search</span>
+                                Pesquisar
+                              </button>
+                              <button class="btn btn-sm btn-secondary" (click)="clearPeriodoFilter()" *ngIf="periodoInicial || periodoFinal">
+                                <span class="material-symbols-rounded text-sm">clear</span>
+                                Limpar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+            <!-- Tabela de Ranking / Empty State -->
+            <div *ngIf="visaoGeral" class="card">
+              <div class="toolbar">
+                <div class="toolbar-left">
+                  <h3 class="page-title text-lg">Ranking de Empresas</h3>
+                </div>
+              </div>
+              <div class="card-divider"></div>
+
+              <!-- Table with results -->
+                            <div *ngIf="filteredEmpresas.length > 0" class="table-wrapper">
+                              <table class="data-table">
+                                <thead>
+                                  <tr>
+                                    <th>Empresa</th>
+                                    <th style="text-align:center;">Competência</th>
+                                    <th style="text-align:center;">CNPJ</th>
+                                    <th style="text-align:center; min-width:140px;">Status</th>
+                                    <th style="text-align:center; width:140px;">Ações</th>
+                                  </tr>
+                                </thead>
+                                <tbody class="stagger-children">
+                                  <tr *ngFor="let emp of filteredEmpresas; let i = index" [class.row-even]="i % 2 === 0">
+                                    <td class="company-name-cell">
+                                      <div class="company-name">{{ emp.razao_social }}</div>
+                                    </td>
+                                    <td style="text-align:center;">{{ formatPeriodoDisplay(emp.periodo) }}</td>
+                                    <td style="text-align:center;"><code class="code">{{ emp.cnpj }}</code></td>
+                                    <td style="text-align:center; min-width:140px;">
+                                      <div class="flex flex-col items-center gap-0.5">
+                                        <span class="badge" [ngClass]="getStatusBadge(emp.status_geral)">
+                                          <span class="badge-dot"></span>
+                                          {{ emp.status_geral }}
+                                        </span>
+                                        <span class="text-xs text-text-dim font-mono">{{ emp.conformidade_pct }}%</span>
+                                      </div>
+                                    </td>
+                                    <td style="text-align:center; width:140px;">
+                                      <div class="action-buttons">
+                                        <span *ngIf="emp.pendencias_criticas_count > 0" class="badge badge-failed mr-2">
+                                          {{ emp.pendencias_criticas_count }}
+                                        </span>
+                                        <button class="btn btn-icon btn-sm" (click)="loadAuditoriaEmpresa(emp.cnpj, emp.periodo)" title="Ver Detalhes">
+                                          <span class="material-symbols-rounded">visibility</span>
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+
+              <!-- Empty State (only replaces table area) -->
+              <div *ngIf="filteredEmpresas.length === 0" class="empty-state p-8 text-center">
+                <div class="empty-icon mb-3">
+                  <span class="material-symbols-rounded text-4xl">data_usage</span>
+                </div>
+                <p class="text-lg font-display text-white/70">Nenhuma auditoria encontrada</p>
+                <p class="mt-2 text-sm text-muted">Ajuste o filtro de período ou pesquisa para encontrar resultados.</p>
+              </div>
+            </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: Análise por Empresa ==================== -->
+  <div *ngIf="activeTab === 'company'">
+    <!-- Loading Skeleton -->
+    <div *ngIf="loading" class="card p-5 space-y-4">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loading && auditoriaDetalheError" class="card p-5 mb-6 bg-error/5 border-error/20">
+      <div class="flex items-start gap-3">
+        <span class="material-symbols-rounded text-error text-2xl">error</span>
+        <div class="flex-1">
+          <span class="font-semibold text-error">Erro ao carregar dados</span>
+          <p class="mt-1 text-sm text-muted">Não foi possível carregar os detalhes da auditoria. Por favor, tente novamente.</p>
+          <button class="btn btn-sm btn-secondary mt-3" (click)="loadAuditoriaEmpresa(selectedCnpj)">
+            <span class="material-symbols-rounded text-sm">refresh</span>
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && auditoriaDetalhe && !auditoriaDetalheError" class="card">
+      <!-- Header da Empresa -->
+      <div class="toolbar flex-wrap">
+        <div class="toolbar-left">
+          <h2 class="page-title text-xl">{{ auditoriaDetalhe.razao_social }}</h2>
+          <p class="page-subtitle">{{ auditoriaDetalhe.cnpj }} | {{ auditoriaDetalhe.periodo }}</p>
+        </div>
+        <div class="toolbar-right">
+          <span class="badge" [ngClass]="getStatusBadge(auditoriaDetalhe.status_geral)">
+            <span class="badge-dot"></span>
+            {{ auditoriaDetalhe.status_geral }}
+          </span>
+          <span class="text-sm font-mono bg-bg-secondary px-3 py-1 rounded-full border border-border">
+            Conformidade: {{ auditoriaDetalhe.conformidade_pct }}%
+          </span>
+        </div>
+      </div>
+      <div class="card-divider"></div>
+
+      <!-- Alertas de Pendências Críticas -->
+      <div *ngIf="alertasCriticos.length > 0" class="p-4">
+        <div class="bg-error/5 border border-error/20 rounded-lg p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-rounded text-error">warning</span>
+            <span class="font-semibold text-error">Alertas Críticos</span>
+          </div>
+          <div class="space-y-2">
+            <div *ngFor="let alerta of alertasCriticos" class="flex items-center gap-3 p-2 bg-bg-secondary/50 rounded">
+              <span class="badge" [ngClass]="alerta.severidade === 'CRITICO' ? 'badge-failed' : 'badge-warning'">
+                <span class="badge-dot"></span>
+                {{ alerta.severidade }}
+              </span>
+              <span class="text-sm text-text-secondary">{{ alerta.mensagem }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas -->
+      <div class="p-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          <div class="stat-card">
+            <div class="stat-card-icon bg-accent/10 text-accent">
+              <span class="material-symbols-rounded">description</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Documentos Esperados</span>
+              <span class="stat-card-value">{{ auditoriaDetalhe.documentos_esperados }}</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon bg-success/10 text-success">
+              <span class="material-symbols-rounded">check</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Encontrados</span>
+              <span class="stat-card-value text-success">{{ auditoriaDetalhe.documentos_encontrados }}</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon bg-warning/10 text-warning">
+              <span class="material-symbols-rounded">warning</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Faltantes</span>
+              <span class="stat-card-value text-warning">{{ auditoriaDetalhe.documentos_esperados - auditoriaDetalhe.documentos_encontrados }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs por Empresa -->
+        <div *ngIf="kpisEmpresa" class="mb-6">
+          <h3 class="page-title text-lg mb-4">KPIs da Empresa</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="stat-card">
+              <div class="stat-card-icon bg-accent/10 text-accent">
+                <span class="material-symbols-rounded">attach_money</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Receita PA</span>
+                <span class="stat-card-value">{{ kpisEmpresa.receitaPA | currency:'BRL':'symbol':'1.2-2' }}</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-info/10 text-info">
+                <span class="material-symbols-rounded">bar_chart</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">RBT12</span>
+                <span class="stat-card-value">{{ kpisEmpresa.rbt12 | currency:'BRL':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-muted">{{ kpisEmpresa.rbt12Percentual.toFixed(1) }}% do limite</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-success/10 text-success">
+                <span class="material-symbols-rounded">calculate</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Fator R</span>
+                <span class="stat-card-value" [class.text-error]="kpisEmpresa.fatorR > 28">{{ kpisEmpresa.fatorR | number:'1.2-2' }}%</span>
+                <span class="text-xs" [class.text-error]="kpisEmpresa.fatorR > 28" [class.text-success]="kpisEmpresa.fatorR <= 28">{{ kpisEmpresa.fatorRStatus }} (limite: 28%)</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-purple/10 text-purple-500">
+                <span class="material-symbols-rounded">percent</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Alíquota Efetiva</span>
+                <span class="stat-card-value">{{ kpisEmpresa.aliquotaEfetiva | number:'1.2-2' }}%</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-warning/10 text-warning">
+                <span class="material-symbols-rounded">account_balance</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">DAS Estimado</span>
+                <span class="stat-card-value">{{ kpisEmpresa.dasEstimado | currency:'BRL':'symbol':'1.2-2' }}</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-teal/10 text-teal-500">
+                <span class="material-symbols-rounded">people</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Folha 12m</span>
+                <span class="stat-card-value">{{ kpisEmpresa.folha12m | currency:'BRL':'symbol':'1.2-2' }}</span>
+                <span class="text-xs text-muted">Média: {{ kpisEmpresa.mediaMensalFolha | currency:'BRL':'symbol':'1.2-2' }}</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-accent/10 text-accent">
+                <span class="material-symbols-rounded">trending_up</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Carga Tributária</span>
+                <span class="stat-card-value">{{ kpisEmpresa.cargaTributaria | currency:'BRL':'symbol':'1.2-2' }}</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon bg-success/10 text-success">
+                <span class="material-symbols-rounded">folder</span>
+              </div>
+              <div class="stat-card-body">
+                <span class="stat-card-label">Classificação Anexo</span>
+                <span class="stat-card-value">{{ auditoriaDetalhe.classificacao_anexo || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cruzamento de Dados -->
+        <div *ngIf="kpisEmpresa" class="mb-6 p-4 bg-bg-secondary/20 border border-bg-secondary/30 rounded-lg">
+          <h3 class="page-title text-lg mb-4">Cruzamento de Dados</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 bg-surface rounded-lg border border-border">
+              <div class="text-xs text-muted mb-1">RBT12 vs Limite</div>
+              <div class="flex items-center gap-2">
+                <div class="flex-1 bg-bg-secondary rounded-full h-2">
+                  <div class="h-2 rounded-full" [class.bg-error]="kpisEmpresa.rbt12Percentual > 95" [class.bg-warning]="kpisEmpresa.rbt12Percentual > 80 && kpisEmpresa.rbt12Percentual <= 95" [class.bg-success]="kpisEmpresa.rbt12Percentual <= 80" [style.width.%]="Math.min(kpisEmpresa.rbt12Percentual, 100)"></div>
+                </div>
+                <span class="text-sm font-mono">{{ kpisEmpresa.rbt12Percentual.toFixed(1) }}%</span>
+              </div>
+              <div class="text-xs text-muted mt-1">Limite: R$ {{ kpisEmpresa.limiteRBT12 | number:'1.0-0' }}</div>
+            </div>
+            <div class="p-3 bg-surface rounded-lg border border-border">
+              <div class="text-xs text-muted mb-1">Fator R vs 28%</div>
+              <div class="flex items-center gap-2">
+                <div class="flex-1 bg-bg-secondary rounded-full h-2">
+                  <div class="h-2 rounded-full" [class.bg-error]="kpisEmpresa.fatorR > 28" [class.bg-success]="kpisEmpresa.fatorR <= 28" [style.width.%]="Math.min((kpisEmpresa.fatorR / 28) * 100, 100)"></div>
+                </div>
+                <span class="text-sm font-mono" [class.text-error]="kpisEmpresa.fatorR > 28">{{ kpisEmpresa.fatorR.toFixed(2) }}%</span>
+              </div>
+              <div class="text-xs text-muted mt-1">Status: {{ kpisEmpresa.fatorRStatus }}</div>
+            </div>
+            <div class="p-3 bg-surface rounded-lg border border-border">
+              <div class="text-xs text-muted mb-1">Carga Tributária</div>
+              <div class="text-lg font-semibold">{{ kpisEmpresa.cargaTributaria | currency:'BRL':'symbol':'1.2-2' }}</div>
+              <div class="text-xs text-muted mt-1">{{ kpisEmpresa.aliquotaEfetiva }}% sobre Receita PA</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Folha de Pagamento -->
+        <div *ngIf="kpisEmpresa" class="mb-6">
+          <h3 class="page-title text-lg mb-4">Folha de Pagamento</h3>
+          <div *ngIf="kpisEmpresa.folha12m > 0 || kpisEmpresa.proLabore > 0 || kpisEmpresa.inss > 0 || kpisEmpresa.irrf > 0 || kpisEmpresa.numFuncionarios > 0">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="stat-card">
+                <div class="stat-card-icon bg-teal/10 text-teal-500">
+                  <span class="material-symbols-rounded">payments</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Total Folha 12m</span>
+                  <span class="stat-card-value">{{ kpisEmpresa.folha12m | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-accent/10 text-accent">
+                  <span class="material-symbols-rounded">account_balance_wallet</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Pró-labore</span>
+                  <span class="stat-card-value">{{ kpisEmpresa.proLabore | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-info/10 text-info">
+                  <span class="material-symbols-rounded">shield</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">INSS</span>
+                  <span class="stat-card-value">{{ kpisEmpresa.inss | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-warning/10 text-warning">
+                  <span class="material-symbols-rounded">receipt</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">IRRF</span>
+                  <span class="stat-card-value">{{ kpisEmpresa.irrf | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-purple/10 text-purple-500">
+                  <span class="material-symbols-rounded">people</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Funcionários</span>
+                  <span class="stat-card-value">{{ kpisEmpresa.numFuncionarios }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-success/10 text-success">
+                  <span class="material-symbols-rounded">trending_up</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Média Mensal</span>
+                  <span class="stat-card-value">{{ kpisEmpresa.mediaMensalFolha | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="kpisEmpresa.folha12m === 0 && kpisEmpresa.proLabore === 0 && kpisEmpresa.inss === 0 && kpisEmpresa.irrf === 0 && kpisEmpresa.numFuncionarios === 0" class="p-4 bg-bg-secondary/50 border border-border rounded-lg text-center">
+            <span class="material-symbols-rounded text-4xl text-muted mb-2">folder_off</span>
+            <p class="text-muted">Sem dados de folha</p>
+          </div>
+        </div>
+
+        <!-- Tabela de Documentos Fiscais -->
+        <div class="mb-6">
+          <h3 class="page-title text-lg mb-4">Documentos Fiscais</h3>
+          <div *ngIf="documentosFiscaisLoading" class="p-4 text-center">
+            <span class="material-symbols-rounded animate-spin">refresh</span>
+            <p class="text-muted mt-2">Carregando documentos...</p>
+          </div>
+          <div *ngIf="!documentosFiscaisLoading && documentosFiscais.length > 0" class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Número</th>
+                  <th style="text-align:center;">Data Emissão</th>
+                  <th style="text-align:center;">Data Vencimento</th>
+                  <th style="text-align:right;">Valor Total</th>
+                  <th style="text-align:center;">Status</th>
+                </tr>
+              </thead>
+              <tbody class="stagger-children">
+                <tr *ngFor="let doc of documentosFiscais">
+                  <td class="company-name">{{ doc.tipo }}</td>
+                  <td class="font-mono text-sm">{{ doc.numero || '-' }}</td>
+                  <td style="text-align:center;">{{ doc.data_emissao | date:'dd/MM/yyyy' }}</td>
+                  <td style="text-align:center;">{{ doc.data_vencimento ? (doc.data_vencimento | date:'dd/MM/yyyy') : '-' }}</td>
+                  <td style="text-align:right;">{{ doc.valor_total ? (doc.valor_total | currency:'BRL':'symbol':'1.2-2') : '-' }}</td>
+                  <td style="text-align:center;">
+                    <span class="badge" [ngClass]="getStatusPendenciaBadge(doc.status)">
+                      <span class="badge-dot"></span>
+                      {{ doc.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="!documentosFiscaisLoading && documentosFiscais.length === 0" class="empty-state py-8 bg-bg-secondary/50 border border-border rounded-lg">
+            <span class="material-symbols-rounded text-4xl text-muted mb-2">description</span>
+            <p class="text-muted">Nenhum documento fiscal encontrado</p>
+          </div>
+        </div>
+
+        <!-- Diagnóstico da IA -->
+        <div *ngIf="auditoriaDetalhe.observacao_geral" class="bg-accent/5 border border-accent/20 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <span class="material-symbols-rounded text-accent text-2xl mt-0.5">article</span>
+          <div class="flex-1">
+            <span class="font-semibold text-accent block mb-1">Diagnóstico da IA</span>
+            <p class="text-sm text-text-secondary leading-relaxed">{{ auditoriaDetalhe.observacao_geral }}</p>
+          </div>
+        </div>
+
+        <!-- Análise IA Detalhada -->
+        <div *ngIf="auditoriaDetalhe.analise_completa" class="bg-accent/5 border border-accent/20 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <span class="material-symbols-rounded text-accent text-2xl mt-0.5">analytics</span>
+          <div class="flex-1">
+            <span class="font-semibold text-accent block mb-1">Análise Completa</span>
+            <p class="text-sm text-text-secondary leading-relaxed">{{ auditoriaDetalhe.analise_completa }}</p>
+          </div>
+        </div>
+
+        
+        <!-- Relatório completo de Fator R (na aba de detalhes) -->
+        <div *ngIf="auditoriaDetalhe" class="mt-6 p-4 bg-bg-secondary/20 border border-bg-secondary/30 rounded-lg">
+          <h3 class="page-title text-lg mb-4">Relatório completo de Fator R</h3>
+          <table class="table table-striped table-sm">
+            <thead>
+              <tr>
+                <th>Empresa</th><th>Fator R</th><th>Anexo</th><th>Alíquota efetiva</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let e of [auditoriaDetalhe]">
+                <td>{{ e.razao_social }}</td>
+                <td>{{ e.fator_r | number:'1.2-2' }}%</td>
+                <td>{{ e.classificacao_anexo }}</td>
+                <td>{{ e.aliquota_efetiva }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+<!-- Métricas IA -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6" *ngIf="auditoriaDetalhe.fator_r || auditoriaDetalhe.aliquota_efetiva || auditoriaDetalhe.receita_pa || auditoriaDetalhe.rbt12 || auditoriaDetalhe.folha_12m">
+          <div class="stat-card" *ngIf="auditoriaDetalhe.fator_r">
+            <div class="stat-card-icon bg-accent/10 text-accent">
+              <span class="material-symbols-rounded">calculate</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Fator R</span>
+              <span class="stat-card-value">{{ auditoriaDetalhe.fator_r }}</span>
+            </div>
+          </div>
+          <div class="stat-card" *ngIf="auditoriaDetalhe.aliquota_efetiva">
+            <div class="stat-card-icon bg-success/10 text-success">
+              <span class="material-symbols-rounded">percent</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Alíquota Efetiva</span>
+              <span class="stat-card-value text-success">{{ auditoriaDetalhe.aliquota_efetiva }}%</span>
+            </div>
+          </div>
+          <div class="stat-card" *ngIf="auditoriaDetalhe.receita_pa">
+            <div class="stat-card-icon bg-warning/10 text-warning">
+              <span class="material-symbols-rounded">attach_money</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Receita PA</span>
+              <span class="stat-card-value text-warning">{{ auditoriaDetalhe.receita_pa | number:'1.0-2' }}</span>
+            </div>
+          </div>
+          <div class="stat-card" *ngIf="auditoriaDetalhe.rbt12">
+            <div class="stat-card-icon bg-info/10 text-info">
+              <span class="material-symbols-rounded">bar_chart</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">RBT12</span>
+              <span class="stat-card-value">{{ auditoriaDetalhe.rbt12 | number:'1.0-2' }}</span>
+            </div>
+          </div>
+          <div class="stat-card" *ngIf="auditoriaDetalhe.folha_12m">
+            <div class="stat-card-icon bg-purple/10 text-purple-500">
+              <span class="material-symbols-rounded">person</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Folha 12m</span>
+              <span class="stat-card-value">{{ auditoriaDetalhe.folha_12m | number:'1.0-2' }}</span>
+            </div>
+          </div>
+          <div class="stat-card" *ngIf="auditoriaDetalhe.classificacao_anexo">
+            <div class="stat-card-icon bg-teal/10 text-teal-500">
+              <span class="material-symbols-rounded">folder</span>
+            </div>
+            <div class="stat-card-body">
+              <span class="stat-card-label">Classificação Anexo</span>
+              <span class="stat-card-value">{{ auditoriaDetalhe.classificacao_anexo }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verificação da Folha de Pagamento -->
+        <div *ngIf="auditoriaDetalhe.folha_12m > 0" class="card mb-6">
+          <div class="card-header">
+            <h3 class="page-title text-lg">Verificação da Folha de Pagamento</h3>
+          </div>
+          <div class="p-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              <div class="stat-card">
+                <div class="stat-card-icon bg-accent/10 text-accent">
+                  <span class="material-symbols-rounded">attach_money</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Pró-labore (12m)</span>
+                  <span class="stat-card-value">{{ auditoriaDetalhe.pro_labore | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-info/10 text-info">
+                  <span class="material-symbols-rounded">account_balance</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">INSS (12m)</span>
+                  <span class="stat-card-value">{{ auditoriaDetalhe.inss | currency:'BRL':'symbol':'1.2-2' }}</span>
+                  <span class="text-xs text-muted">Esperado: {{ auditoriaDetalhe.inss_esperado | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-warning/10 text-warning">
+                  <span class="material-symbols-rounded">receipt</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">IRRF (12m)</span>
+                  <span class="stat-card-value">{{ auditoriaDetalhe.irrf | currency:'BRL':'symbol':'1.2-2' }}</span>
+                  <span class="text-xs text-muted">Esperado: {{ auditoriaDetalhe.irrf_esperado | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-success/10 text-success">
+                  <span class="material-symbols-rounded">savings</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">FGTS (12m)</span>
+                  <span class="stat-card-value">{{ auditoriaDetalhe.fgts | currency:'BRL':'symbol':'1.2-2' }}</span>
+                  <span class="text-xs text-muted">Esperado: {{ auditoriaDetalhe.fgts_esperado | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-purple/10 text-purple-500">
+                  <span class="material-symbols-rounded">people</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Funcionários</span>
+                  <span class="stat-card-value">{{ auditoriaDetalhe.num_funcionarios }}</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card-icon bg-teal/10 text-teal-500">
+                  <span class="material-symbols-rounded">calculate</span>
+                </div>
+                <div class="stat-card-body">
+                  <span class="stat-card-label">Média Mensal</span>
+                  <span class="stat-card-value">{{ auditoriaDetalhe.media_mensal_folha | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalhes do cálculo IRRF -->
+            <div class="bg-bg-secondary/50 border border-border rounded-lg p-4">
+              <h4 class="font-semibold text-sm mb-3">Detalhes do Cálculo IRRF</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-muted">Base de cálculo:</span>
+                  <span class="font-mono">{{ auditoriaDetalhe.base_calculo_irrf | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Deduções legais:</span>
+                  <span class="font-mono">{{ auditoriaDetalhe.deducoes_legais | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Líquido esperado:</span>
+                  <span class="font-mono">{{ auditoriaDetalhe.liquido_esperado | currency:'BRL':'symbol':'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted">Alíquota efetiva:</span>
+                  <span class="font-mono">{{ auditoriaDetalhe.aliquota_efetiva }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela de Pendências -->
+        <div *ngIf="auditoriaDetalhe.pendencias && auditoriaDetalhe.pendencias.length > 0">
+          <h3 class="page-title text-lg mb-4">Pendências Identificadas</h3>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tipo de Documento</th>
+                  <th style="text-align:center;">Gravidade</th>
+                  <th style="text-align:center;">Status</th>
+                  <th>Observação</th>
+                </tr>
+              </thead>
+              <tbody class="stagger-children">
+                <tr *ngFor="let p of auditoriaDetalhe.pendencias">
+                  <td class="company-name">{{ p.tipo_documento }}</td>
+                  <td style="text-align:center;">
+                    <span class="badge" [ngClass]="getGravidadeBadge(p.gravidade)">
+                      <span class="badge-dot"></span>
+                      {{ p.gravidade }}
+                    </span>
+                  </td>
+                  <td style="text-align:center;">
+                    <span class="badge" [ngClass]="getStatusPendenciaBadge(p.status)">
+                      <span class="badge-dot"></span>
+                      {{ p.status }}
+                    </span>
+                  </td>
+                  <td class="text-text-secondary text-sm">{{ p.observacao }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div *ngIf="auditoriaDetalhe.pendencias && auditoriaDetalhe.pendencias.length === 0" class="empty-state py-8 bg-success/5 border border-success/20 rounded-lg">
+          <span class="material-symbols-rounded text-success text-4xl mb-2">check_circle</span>
+          <p class="text-success font-semibold">Nenhuma pendência encontrada</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State (Nenhuma empresa selecionada) -->
+    <div *ngIf="!loading && !auditoriaDetalhe && !auditoriaDetalheError" class="card empty-state">
+      <div class="empty-icon">
+        <span class="material-symbols-rounded">data_usage</span>
+      </div>
+      <p class="text-lg font-display text-white/70">Nenhum dado encontrado</p>
+      <p class="mt-2 text-sm text-muted">Selecione uma empresa na aba "Visão Geral" para visualizar os detalhes.</p>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: Ingest Form ==================== -->
+  <div *ngIf="activeTab === 'ingest'" class="card">
+    <!-- Loading Skeleton -->
+    <div *ngIf="loading" class="p-5 space-y-4">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+
+    <div *ngIf="!loading" class="p-6">
+      <h2 class="page-title text-xl mb-6">Novo Ingest de Auditoria</h2>
+      
+      <form (ngSubmit)="submitIngest()" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="form-group">
+            <label class="form-label">CNPJ</label>
+            <input type="text" [(ngModel)]="ingestPayload.cnpj" name="cnpj" placeholder="00.000.000/0000-00" class="form-input font-mono" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Razão Social</label>
+            <input type="text" [(ngModel)]="ingestPayload.razao_social" name="razao_social" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Período</label>
+            <input type="text" [(ngModel)]="ingestPayload.periodo" name="periodo" placeholder="2026-08" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status Geral</label>
+            <select [(ngModel)]="ingestPayload.status_geral" name="status_geral" class="form-input form-select">
+              <option value="CONFORME">CONFORME</option>
+              <option value="ATENCAO">ATENCAO</option>
+              <option value="CRITICO">CRITICO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Conformidade %</label>
+            <input type="number" [(ngModel)]="ingestPayload.conformidade_pct" name="conformidade_pct" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Documentos Esperados</label>
+            <input type="number" [(ngModel)]="ingestPayload.documentos_esperados" name="documentos_esperados" class="form-input">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Documentos Encontrados</label>
+          <input type="number" [(ngModel)]="ingestPayload.documentos_encontrados" name="documentos_encontrados" class="form-input">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Observação Geral</label>
+          <textarea [(ngModel)]="ingestPayload.observacao_geral" name="observacao_geral" rows="3" class="form-input form-textarea"></textarea>
+        </div>
+        
+        <!-- Pendências -->
+        <div class="pt-4 border-t border-border">
+          <label class="form-label mb-3 block">Pendências</label>
+          <div *ngFor="let p of ingestPayload.pendencias; let i = index" class="flex flex-wrap md:flex-nowrap gap-3 mb-3 p-3 bg-bg-secondary rounded-lg border border-border items-end">
+            <div class="form-group flex-1 min-w-[150px]">
+              <input type="text" [(ngModel)]="p.tipo_documento" name="tipo_{{i}}" placeholder="Tipo de Documento" required class="form-input">
+            </div>
+            <div class="form-group w-full md:w-32">
+              <select [(ngModel)]="p.gravidade" name="grav_{{i}}" class="form-input form-select">
+                <option value="ALTA">ALTA</option>
+                <option value="MÉDIA">MÉDIA</option>
+                <option value="BAIXA">BAIXA</option>
+              </select>
+            </div>
+            <div class="form-group flex-[2] min-w-[200px]">
+              <input type="text" [(ngModel)]="p.observacao" name="obs_{{i}}" placeholder="Observação" required class="form-input">
+            </div>
+            <div class="form-group w-full md:w-32">
+              <input type="number" [(ngModel)]="p.crf" name="crf_{{i}}" placeholder="CRF" class="form-input">
+            </div>
+            <div class="form-group w-full md:w-32">
+              <input type="text" [(ngModel)]="p.crt" name="crt_{{i}}" placeholder="CRT" class="form-input">
+            </div>
+            <div class="form-group w-full md:w-32">
+              <input type="number" [(ngModel)]="p.base_calculo" name="base_{{i}}" placeholder="Base Cálculo" class="form-input">
+            </div>
+            <div class="form-group w-full md:w-32">
+              <input type="number" [(ngModel)]="p.receita_declarada" name="rec_{{i}}" placeholder="Rec. Declarada" class="form-input">
+            </div>
+            <button type="button" (click)="ingestPayload.pendencias.splice(i, 1)" class="btn btn-icon btn-sm btn-cancel mb-0.5" title="Remover">
+              <span class="material-symbols-rounded">close</span>
+            </button>
+          </div>
+          <button type="button" (click)="ingestPayload.pendencias.push({tipo_documento: '', gravidade: 'BAIXA', status: 'FALTANTE', observacao: '', crf: 0, crt: '', base_calculo: 0, receita_declarada: 0})" class="btn btn-sm btn-ghost border-dashed border border-border">
+            <span class="material-symbols-rounded text-sm">add</span>
+            Adicionar Pendência
+          </button>
+        </div>
+        
+        <!-- Análise IA Campos -->
+        <div class="pt-4 border-t border-border">
+          <h3 class="page-title text-lg mb-4">Campos de Análise IA</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="form-group">
+              <label class="form-label">Fator R</label>
+              <input type="number" [(ngModel)]="ingestPayload.fator_r" name="fator_r" class="form-input" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Alíquota Efetiva (%)</label>
+              <input type="number" [(ngModel)]="ingestPayload.aliquota_efetiva" name="aliquota_efetiva" class="form-input" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Receita PA (R$)</label>
+              <input type="number" [(ngModel)]="ingestPayload.receita_pa" name="receita_pa" class="form-input" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">RBT12 (R$)</label>
+              <input type="number" [(ngModel)]="ingestPayload.rbt12" name="rbt12" class="form-input" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Folha 12m (R$)</label>
+              <input type="number" [(ngModel)]="ingestPayload.folha_12m" name="folha_12m" class="form-input" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Classificação Anexo</label>
+              <input type="text" [(ngModel)]="ingestPayload.classificacao_anexo" name="classificacao_anexo" class="form-input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Análise Completa</label>
+            <textarea [(ngModel)]="ingestPayload.analise_completa" name="analise_completa" rows="3" class="form-input form-textarea" placeholder="Análise completa gerada pelo DeepSeek"></textarea>
+          </div>
+        </div>
+        
+        <div class="pt-4">
+          <button type="submit" class="btn btn-primary w-full md:w-auto px-8">
+            <span class="material-symbols-rounded">save</span>
+            Salvar Auditoria
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

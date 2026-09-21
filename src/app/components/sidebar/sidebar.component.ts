@@ -20,6 +20,11 @@ export class SidebarComponent {
       icon: 'business'
     },
     {
+      label: 'Auditoria',
+      path: '/auditoria',
+      icon: 'verified_user'
+    },
+    {
       label: 'Download NFSe',
       path: '/download',
       icon: 'download'

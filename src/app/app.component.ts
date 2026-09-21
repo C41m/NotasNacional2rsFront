@@ -26,6 +26,7 @@ export class AppComponent implements OnInit {
   private routeLabels: { [key: string]: string } = {
     '/companies': 'Empresas',
     '/companies/new': 'Nova Empresa',
+    '/auditoria': 'Auditoria',
     '/download': 'Download NFSe',
     '/batches': 'Downloads Ativos'
   };

@@ -1,0 +1,200 @@
+<!-- Page Header -->
+<header class="page-hero">
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="page-title mb-1">Documentos Fiscais</h1>
+      <p class="page-subtitle">Gerencie documentos fiscais das empresas</p>
+    </div>
+  </div>
+</header>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+  <div class="stat-card">
+    <div class="stat-card-icon bg-accent/10 text-accent">
+      <span class="material-symbols-rounded">description</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Total</span>
+      <span class="stat-card-value">{{ total }}</span>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-icon bg-success/10 text-success">
+      <span class="material-symbols-rounded">check_circle</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Ativos</span>
+      <span class="stat-card-value text-success">{{ countAtivos }}</span>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-icon bg-warning/10 text-warning">
+      <span class="material-symbols-rounded">pending</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Pendentes</span>
+      <span class="stat-card-value text-warning">{{ countPendentes }}</span>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-icon bg-error/10 text-error">
+      <span class="material-symbols-rounded">cancel</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-label">Cancelados</span>
+      <span class="stat-card-value text-error">{{ countCancelados }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main Card -->
+<div class="card">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrapper">
+        <span class="material-symbols-rounded search-icon">search</span>
+        <input
+          type="text"
+          class="form-input"
+          placeholder="Buscar por número, série ou chave de acesso..."
+          [(ngModel)]="filtros.search"
+          (ngModelChange)="onSearch()"
+        />
+        <button class="search-clear" *ngIf="filtros.search" (click)="clearSearch()">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-sm btn-ghost" (click)="clearFilters()">
+        <span class="material-symbols-rounded text-sm">filter_alt_off</span>
+        Limpar Filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros Avançados -->
+  <div class="card-divider"></div>
+  <div class="p-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="form-group mb-0">
+        <label class="form-label">Empresa</label>
+        <select class="form-control" [(ngModel)]="filtros.empresa_id" (ngModelChange)="onFilterChange()">
+          <option [value]="undefined">Todas</option>
+          <option *ngFor="let emp of empresas" [value]="emp.id">{{ emp.nome }}</option>
+        </select>
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Tipo</label>
+        <select class="form-control" [(ngModel)]="filtros.tipo" (ngModelChange)="onFilterChange()">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tiposDocumentos" [value]="tipo">{{ tipo }}</option>
+        </select>
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Data Início</label>
+        <input type="date" class="form-control" [(ngModel)]="filtros.data_inicio" (ngModelChange)="onFilterChange()" />
+      </div>
+
+      <div class="form-group mb-0">
+        <label class="form-label">Data Fim</label>
+        <input type="date" class="form-control" [(ngModel)]="filtros.data_fim" (ngModelChange)="onFilterChange()" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card-divider"></div>
+
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading" class="p-5 space-y-4">
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading && documentos.length > 0" class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="text-align:center; width:60px;">ID</th>
+          <th>Empresa</th>
+          <th style="text-align:center;">Tipo</th>
+          <th style="text-align:center;">Número</th>
+          <th style="text-align:center;">Série</th>
+          <th style="text-align:center;">Data Emissão</th>
+          <th style="text-align:center;">Data Vencimento</th>
+          <th style="text-align:center;">Valor Total</th>
+          <th style="text-align:center;">Status</th>
+          <th style="text-align:center; width:140px;">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="stagger-children">
+        <tr *ngFor="let doc of documentos; let i = index" [class.row-even]="i % 2 === 0">
+          <td style="text-align:center;">
+            <span class="text-sm font-mono">{{ doc.id }}</span>
+          </td>
+          <td>
+            <div class="company-name">{{ doc.empresa_nome || 'Empresa #' + doc.empresa_id }}</div>
+          </td>
+          <td style="text-align:center;">
+            <span class="badge" [ngClass]="getTipoBadgeClass(doc.tipo)">{{ doc.tipo }}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="text-sm font-mono">{{ doc.numero || '-' }}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="text-sm">{{ doc.serie || '-' }}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="text-sm">{{ formatDate(doc.data_emissao) }}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="text-sm">{{ formatDate(doc.data_vencimento) }}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="text-sm font-mono">{{ formatCurrency(doc.valor_total) }}</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="badge" [ngClass]="getStatusBadgeClass(doc.status)">
+              <span class="badge-dot"></span>
+              {{ doc.status }}
+            </span>
+          </td>
+          <td style="text-align:center;">
+            <div class="action-buttons">
+              <button class="btn btn-icon btn-sm" (click)="visualizarDocumento(doc.id)" title="Visualizar">
+                <span class="material-symbols-rounded">visibility</span>
+              </button>
+              <button class="btn btn-icon btn-sm" (click)="editarDocumento(doc.id)" title="Editar">
+                <span class="material-symbols-rounded">edit_note</span>
+              </button>
+              <button class="btn btn-icon btn-sm btn-cancel" (click)="removerDocumento(doc.id, doc.numero || 'Documento #' + doc.id)" title="Remover">
+                <span class="material-symbols-rounded">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && documentos.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <span class="material-symbols-rounded">description</span>
+    </div>
+    <p class="text-lg font-display text-white/70">Nenhum documento fiscal encontrado</p>
+    <p class="mt-2 text-sm text-muted">Ajuste os filtros ou cadastre um novo documento fiscal.</p>
+  </div>
+</div>
