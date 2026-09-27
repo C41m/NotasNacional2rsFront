@@ -14,8 +14,6 @@ import { BatchRequest, BatchStatus } from '../../models/download.model';
 })
 export class DownloadFormComponent implements OnInit {
   companyIds: number[] = [];
-  datainicio: string = '';
-  datafim: string = '';
   downloadType: 'xml' | 'pdf' | 'both' = 'xml';
   loading = false;
   batchId: string | null = null;
@@ -35,21 +33,11 @@ export class DownloadFormComponent implements OnInit {
   }
 
   onSubmit() {
-    if (!this.datainicio || !this.datafim) {
-      alert('Preencha as datas');
-      return;
-    }
     this.loading = true;
-    // Converter formato DD/MM/AAAA para DD/MM/AAAA (frontend usa input type="date" que retorna YYYY-MM-DD)
-    const formatDate = (date: string) => {
-      const [year, month, day] = date.split('-');
-      const formatedDate = `${day}/${month}/${year}`;
-      return formatedDate;
-    };
     const request: BatchRequest = {
       company_ids: this.companyIds,
-      datainicio: formatDate(this.datainicio),
-      datafim: formatDate(this.datafim),
+      datainicio: '',
+      datafim: '',
       download_type: this.downloadType
     };
     this.api.startBatchDownload(request).subscribe({

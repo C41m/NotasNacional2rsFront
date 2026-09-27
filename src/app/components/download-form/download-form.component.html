@@ -28,36 +28,6 @@
 <div class="card" *ngIf="!loading">
   <form (ngSubmit)="onSubmit()" #downloadForm="ngForm" class="space-y-6">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Data Inicial -->
-      <div class="form-group">
-        <label for="datainicio" class="form-label">
-          <span class="material-symbols-rounded align-middle text-sm mr-1">calendar_today</span>
-          Data Inicial
-        </label>
-        <input type="date"
-               id="datainicio"
-               [(ngModel)]="datainicio"
-               name="datainicio"
-               required
-               class="form-control" />
-      </div>
-
-      <!-- Data Final -->
-      <div class="form-group">
-        <label for="datafim" class="form-label">
-          <span class="material-symbols-rounded align-middle text-sm mr-1">event</span>
-          Data Final
-        </label>
-        <input type="date"
-               id="datafim"
-               [(ngModel)]="datafim"
-               name="datafim"
-               required
-               class="form-control" />
-      </div>
-    </div>
-
     <!-- Download Type -->
     <div class="form-group">
       <label class="form-label mb-3">
@@ -73,22 +43,6 @@
                  class="w-4 h-4 text-accent" />
           <span class="text-sm">XML apenas</span>
         </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="radio"
-                 [(ngModel)]="downloadType"
-                 name="downloadType"
-                 value="pdf"
-                 class="w-4 h-4 text-accent" />
-          <span class="text-sm">PDF (DANFS-e) apenas</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="radio"
-                 [(ngModel)]="downloadType"
-                 name="downloadType"
-                 value="both"
-                 class="w-4 h-4 text-accent" />
-          <span class="text-sm">XML + PDF</span>
-        </label>
       </div>
     </div>
 
@@ -100,7 +54,7 @@
       </a>
       <button type="submit"
               class="btn btn-primary"
-              [disabled]="loading || !datainicio || !datafim">
+              [disabled]="loading">
         <span *ngIf="!loading">
           <span class="material-symbols-rounded text-sm">download</span>
           Iniciar Download

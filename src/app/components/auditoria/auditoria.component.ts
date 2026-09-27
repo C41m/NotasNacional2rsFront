@@ -57,6 +57,9 @@ export class AuditoriaComponent implements OnInit {
   // Alertas de pendências críticas
   alertasCriticos: any[] = [];
 
+  // Progressive disclosure
+  showFullDetails: boolean = false;
+
   // Cálculos da folha de pagamento
   calcularFolha() {
     if (!this.auditoriaDetalhe) return;
@@ -444,6 +447,23 @@ export class AuditoriaComponent implements OnInit {
 
       this.alertasCriticos = alertas;
     }
+
+  addPendencia() {
+    this.ingestPayload.pendencias.push({
+      tipo_documento: '',
+      gravidade: 'BAIXA',
+      status: 'FALTANTE',
+      observacao: '',
+      crf: 0,
+      crt: '',
+      base_calculo: 0,
+      receita_declarada: 0
+    });
+  }
+
+  removePendencia(index: number) {
+    this.ingestPayload.pendencias.splice(index, 1);
+  }
 
   submitIngest() {
     this.loading = true;

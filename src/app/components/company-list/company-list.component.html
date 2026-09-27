@@ -116,13 +116,15 @@
         </tr>
       </thead>
       <tbody class="stagger-children">
-        <tr *ngFor="let company of companies; let i = index" [class.row-even]="i % 2 === 0">
+        <tr *ngFor="let company of companies; let i = index" [class.row-even]="i % 2 === 0" [class.row-expired]="isCertExpired(company.validade_cert)">
           <td>
             <input
               type="checkbox"
               [checked]="selectedIds.includes(company.id)"
               (change)="toggleSelection(company.id)"
               class="accent-teal"
+              [disabled]="isCertExpired(company.validade_cert)"
+              [title]="isCertExpired(company.validade_cert) ? 'Certificado vencido - clique em editar para atualizar' : ''"
             />
           </td>
           <td style="text-align:center;">
@@ -135,9 +137,9 @@
           <td style="text-align:center;"><code class="code">{{ company.cnpj }}</code></td>
           <td style="text-align:center;">
             <div class="flex flex-col items-center gap-0.5">
-              <span class="badge" [ngClass]="company.validade_cert ? 'badge-processing' : 'badge-failed'">
+              <span class="badge" [ngClass]="isCertExpired(company.validade_cert) ? 'badge-failed' : (isCertExpiringSoon(company.validade_cert) ? 'badge-warning' : 'badge-processing')">
                 <span class="badge-dot"></span>
-                {{ company.validade_cert ? 'Válido' : 'Sem Certificado' }}
+                {{ isCertExpired(company.validade_cert) ? 'Vencido' : (isCertExpiringSoon(company.validade_cert) ? 'Vencendo' : 'Válido') }}
               </span>
               <span *ngIf="company.validade_cert" class="text-xs text-text-dim font-mono">{{ formatCertDate(company.validade_cert) }}</span>
             </div>
@@ -147,7 +149,7 @@
               <button class="btn btn-icon btn-sm" (click)="editCompany(company.id)" title="Editar">
                 <span class="material-symbols-rounded">edit_note</span>
               </button>
-              <button class="btn btn-icon btn-sm btn-cancel" (click)="deleteCompany(company.id, company.nome)" title="Excluir">
+              <button class="btn btn-icon btn-sm btn-cancel" (click)="deleteCompany(company.id, company.nome)" title="Excluir" [disabled]="!isCertExpired(company.validade_cert)">
                 <span class="material-symbols-rounded">delete</span>
               </button>
             </div>

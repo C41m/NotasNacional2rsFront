@@ -96,11 +96,28 @@ export class CompanyListComponent implements OnInit {
     window.location.href = '/download';
   }
 
-  formatCertDate(dateStr: string | null): string {
+  formatCertDate(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     const pad = (n: number) => String(n).padStart(2, '0');
     return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+  }
+
+  isCertExpired(validade: string | null | undefined): boolean {
+    if (!validade) return true;
+    const validDate = new Date(validade);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return validDate < now;
+  }
+
+  isCertExpiringSoon(validade: string | null | undefined): boolean {
+    if (!validade) return false;
+    const validDate = new Date(validade);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const diffDays = (validDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 30;
   }
 
   onSearch() {
